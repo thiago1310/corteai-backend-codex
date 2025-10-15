@@ -41,7 +41,7 @@ export class TenantSchemaService {
 
   private async ensureExtension(runner: QueryRunner): Promise<void> {
     try {
-      await runner.query('CREATE EXTENSION IF NOT EXISTS vector');
+      await runner.query('CREATE EXTENSION IF NOT EXISTS vector SCHEMA pg_catalog');
     } catch (error) {
       const err = error as Error;
       this.logger.warn('Could not create pgvector extension automatically – ensure it exists beforehand.');
@@ -56,7 +56,7 @@ export class TenantSchemaService {
         created_at TIMESTAMP DEFAULT now(),
         content TEXT,
         metadata JSONB,
-        embedding VECTOR(1536)
+        embedding pg_catalog.vector(1536)
       )
     `);
 

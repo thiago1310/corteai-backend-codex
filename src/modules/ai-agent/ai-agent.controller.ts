@@ -13,10 +13,11 @@ import { TenantSchema } from './decorators/tenant-schema.decorator';
   }),
 )
 export class AiAgentController {
-  constructor(private readonly aiAgentService: AiAgentService) {}
+  constructor(private readonly aiAgentService: AiAgentService) { }
 
   @Post('ask')
   async ask(@Body() dto: AskDto, @TenantSchema() schema: string) {
+
     const response = await this.aiAgentService.ask(dto);
     return { schema, ...response };
   }
