@@ -20,43 +20,12 @@ import { Agendamento } from './modules/agendamentos/agendamentos.entity';
 import { AgendamentoServico } from './modules/agendamentos/agendamento-servicos.entity';
 import { Faq } from './modules/faq/faq.entity';
 import { Lancamento } from './modules/lancamentos/lancamentos.entity';
+import databaseConfig from './modules/config/database.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      inject: [],
-      useFactory: () => {
-        const databaseUrl = process.env.DATABASE_URL;
-        return databaseUrl
-          ? {
-              type: 'postgres',
-              url: databaseUrl,
-              autoLoadEntities: true,
-              synchronize: true,
-            }
-          : {
-              type: 'postgres',
-              host: process.env.DB_HOST || 'localhost',
-              port: Number(process.env.DB_PORT || 5432),
-              username: process.env.DB_USER || 'user',
-              password: process.env.DB_PASS || 'pass',
-              database: process.env.DB_NAME || 'barber_saas',
-              entities: [
-                Usuario,
-                Barbearia,
-                BarbeariaHorario,
-                Servico,
-                Profissional,
-                Agendamento,
-                AgendamentoServico,
-                Faq,
-                Lancamento,
-              ],
-              synchronize: true,
-            };
-      },
-    }),
+    TypeOrmModule.forRoot(databaseConfig()),
     AuthModule,
     UsuariosModule,
     BarbeariasModule,
@@ -69,4 +38,4 @@ import { Lancamento } from './modules/lancamentos/lancamentos.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
