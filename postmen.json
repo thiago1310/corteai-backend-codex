@@ -1,0 +1,135 @@
+{
+    "info": {
+        "_postman_id": "8a706388-0e9a-4c40-9b9f-5c6c1f6335d1",
+        "name": "CorteAI RAG Agent",
+        "description": "Rotas do módulo ai-agent com suporte a schemas multi-tenant via header x-tenant-schema.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "AI Train",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "x-tenant-schema",
+                        "value": "{{tenantSchema}}"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"documents\": [\n    \"Horário de funcionamento: segunda a sábado, 9h às 20h.\",\n    \"Oferecemos cortes tradicionais, fades e barba completa.\",\n    \"Promoção: na terça-feira, corte + barba por R$49,90.\"\n  ],\n  \"source\": \"manual-operacional\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/ai/train",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "ai",
+                        "train"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "AI Ask",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "x-tenant-schema",
+                        "value": "{{tenantSchema}}"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"question\": \"Quais serviços promocionais estão disponíveis nesta semana?\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/ai/ask",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "ai",
+                        "ask"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "AI History",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "x-tenant-schema",
+                        "value": "{{tenantSchema}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/ai/history?limit=20",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "ai",
+                        "history"
+                    ],
+                    "query": [
+                        {
+                            "key": "limit",
+                            "value": "20"
+                        }
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "AI Debug Schema",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "x-tenant-schema",
+                        "value": "{{tenantSchema}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/ai/debug/schema",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "ai",
+                        "debug",
+                        "schema"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:6363"
+        },
+        {
+            "key": "tenantSchema",
+            "value": "public"
+        }
+    ]
+}

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -21,6 +21,8 @@ import { AgendamentoServico } from './modules/agendamentos/agendamento-servicos.
 import { Faq } from './modules/faq/faq.entity';
 import { Lancamento } from './modules/lancamentos/lancamentos.entity';
 import databaseConfig from './modules/config/database.config';
+import { AiAgentModule } from './modules/ai-agent/ai-agent.module';
+import { TenantMiddleware } from './modules/ai-agent/middleware/tenant.middleware';
 
 @Module({
   imports: [
@@ -34,8 +36,13 @@ import databaseConfig from './modules/config/database.config';
     AgendamentosModule,
     FaqModule,
     LancamentosModule,
+    AiAgentModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TenantMiddleware],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(TenantMiddleware).forRoutes('*');
+  }
+}
