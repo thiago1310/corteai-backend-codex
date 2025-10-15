@@ -20,7 +20,7 @@ export class AiAgentService {
     private readonly ragService: RagService,
     private readonly tenantSchemaService: TenantSchemaService,
     private readonly tenantContext: TenantContextService,
-  ) {}
+  ) { }
 
   async ask(dto: AskDto) {
     await this.persistHistory('user', dto.question);
@@ -67,6 +67,7 @@ export class AiAgentService {
   }
 
   private async persistHistory(role: 'user' | 'assistant', content: string): Promise<void> {
+
     await this.tenantSchemaService.runInTenant(async (manager) => {
       await manager.query(
         `INSERT INTO chat_history (role, content) VALUES ($1, $2)`,
