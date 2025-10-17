@@ -1,8 +1,21 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { AuthService, LoginDto } from './auth.service';
+import { Body, Controller, Patch, Post } from '@nestjs/common';
+import { IsIn, IsString, MinLength } from 'class-validator';
+import { AuthService, ChangePasswordDto, LoginDto, PasswordChangeScope } from './auth.service';
 import { UsuariosService, CreateUsuarioDto } from '../usuarios/usuarios.service';
 import { BarbeariasService } from '../barbearias/barbearias.service';
 import { CreateBarbeariaDTO } from '../barbearias/barbearia.dto';
+
+class ChangePasswordBody implements ChangePasswordDto {
+  @IsString()
+  id!: string;
+
+  @IsString()
+  @MinLength(6)
+  novaSenha!: string;
+
+  @IsIn(['barbearia', 'profissional'])
+  scope!: PasswordChangeScope;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -25,5 +38,10 @@ export class AuthController {
   @Post('register/barbearia')
   registerBarbearia(@Body() body: CreateBarbeariaDTO) {
     return this.barbearias.create(body);
+  }
+
+  @Patch('password')
+  changePassword(@Body() body: ChangePasswordBody) {
+    return this.auth.changePassword(body);
   }
 }

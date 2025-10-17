@@ -25,6 +25,9 @@ export class Profissional {
   @Column({ length: 20, nullable: true })
   telefone?: string;
 
+  @Column({ length: 255, nullable: true, select: false })
+  senha?: string;
+
   @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
   comissao!: number; // percentual
 

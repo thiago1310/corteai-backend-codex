@@ -30,6 +30,10 @@ export class BarbeariaEntity {
   @Column()
   senha!: string;
 
+  @Index({ unique: true })
+  @Column({ length: 150 })
+  link!: string;
+
   @Column({ length: 20, nullable: true })
   telefone?: string;
 

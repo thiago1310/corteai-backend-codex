@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsuariosModule } from '../usuarios/usuarios.module';
 import { BarbeariasModule } from '../barbearias/barbearias.module';
+import { ProfissionaisModule } from '../profissionais/profissionais.module';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 
@@ -20,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
     }),
     UsuariosModule,
     BarbeariasModule,
+    ProfissionaisModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
