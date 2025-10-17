@@ -18,8 +18,17 @@ async function bootstrap() {
     process.exit(0);
   };
 
-  ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGBREAK'].forEach((signal) => {
-    process.on(signal as NodeJS.Signals, () => void shutdown(signal));
+  ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGBREAK', 'SIGUSR2', 'SIGHUP'].forEach((signal) => {
+    try {
+      process.on(signal as NodeJS.Signals, () => void shutdown(signal));
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.includes('Unknown signal')
+      ) {
+        throw error;
+      }
+    }
   });
 }
 bootstrap();

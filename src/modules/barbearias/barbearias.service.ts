@@ -48,8 +48,8 @@ export class BarbeariasService {
     if (!barbearia) {
       throw new NotFoundException('Barbearia não encontrada.');
     }
-
-    return barbearia;
+    const { senha, ...result } = barbearia;
+    return result;
   }
 
   findByEmail(email: string) {

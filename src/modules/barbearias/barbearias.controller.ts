@@ -18,7 +18,7 @@ export class BarbeariasController {
     return this.service.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
