@@ -20,13 +20,15 @@ export class BarbeariasService {
     }
 
     const senhaHash = await bcrypt.hash(data.senha, 10);
-    const { senha, ...entity } = this.repo.create({
+    const entity = await this.repo.create({
       ...data,
       senha: senhaHash,
       dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : undefined,
       validadeLicenca: data.validadeLicenca ? new Date(data.validadeLicenca) : undefined,
     });
-    return this.repo.save(entity);
+    await this.repo.save(entity);
+    const { senha, ...entitySemSenha } = entity;
+    return entitySemSenha;
   }
 
   findAll() {
