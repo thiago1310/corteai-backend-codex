@@ -11,6 +11,7 @@ export enum DiaSemana {
   SABADO = 'sabado',
 }
 
+
 @Entity('barbearia_horarios')
 export class BarbeariaHorarioEntity {
   @PrimaryGeneratedColumn('uuid')
