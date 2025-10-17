@@ -33,8 +33,13 @@ export class BarbeariasService {
     return entitySemSenha;
   }
 
-  findAll() {
-    return this.repo.find();
+  async findAll() {
+    const allBarbearia = await this.repo.find();
+
+    return allBarbearia.map((barbearia) => {
+      const { senha, ...result } = barbearia;
+      return result;
+    })
   }
 
   async findOne(id: string) {

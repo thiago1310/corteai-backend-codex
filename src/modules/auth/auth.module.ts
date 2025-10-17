@@ -6,13 +6,17 @@ import { AuthService } from './auth.service';
 import { UsuariosModule } from '../usuarios/usuarios.module';
 import { BarbeariasModule } from '../barbearias/barbearias.module';
 import { JwtStrategy } from './jwt.strategy';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'seusegredoaqui',
-      signOptions: { expiresIn: '7d' },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET') ?? 'seusegredoaqui',
+        signOptions: { expiresIn: '7d' },
+      }),
     }),
     UsuariosModule,
     BarbeariasModule,
@@ -21,4 +25,4 @@ import { JwtStrategy } from './jwt.strategy';
   providers: [AuthService, JwtStrategy],
   exports: [JwtModule],
 })
-export class AuthModule {}
+export class AuthModule { }
