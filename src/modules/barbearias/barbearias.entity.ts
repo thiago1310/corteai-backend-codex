@@ -7,13 +7,13 @@ import {
 } from 'typeorm';
 import { Profissional } from '../profissionais/profissionais.entity';
 import { Servico } from '../servicos/servicos.entity';
-import { BarbeariaHorario } from './barbearia-horarios.entity';
+import { BarbeariaHorarioEntity } from './barbearia-horarios.entity';
 import { Agendamento } from '../agendamentos/agendamentos.entity';
 import { Faq } from '../faq/faq.entity';
 import { Lancamento } from '../lancamentos/lancamentos.entity';
 
 @Entity('barbearias')
-export class Barbearia {
+export class BarbeariaEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -68,8 +68,8 @@ export class Barbearia {
   @OneToMany(() => Servico, (s) => s.barbearia)
   servicos!: Servico[];
 
-  @OneToMany(() => BarbeariaHorario, (h) => h.barbearia)
-  horarios!: BarbeariaHorario[];
+  @OneToMany(() => BarbeariaHorarioEntity, (h) => h.barbearia)
+  horarios!: BarbeariaHorarioEntity[];
 
   @OneToMany(() => Agendamento, (a) => a.barbearia)
   agendamentos!: Agendamento[];

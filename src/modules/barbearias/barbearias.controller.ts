@@ -1,13 +1,14 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { BarbeariasService, CreateBarbeariaDto } from './barbearias.service';
+import { BarbeariasService } from './barbearias.service';
+import { CreateBarbeariaDTO } from './barbearia.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('barbearias')
 export class BarbeariasController {
-  constructor(private readonly service: BarbeariasService) {}
+  constructor(private readonly service: BarbeariasService) { }
 
   @Post()
-  create(@Body() body: CreateBarbeariaDto) {
+  create(@Body() body: CreateBarbeariaDTO) {
     return this.service.create(body);
   }
 

@@ -1,37 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Barbearia } from './barbearias.entity';
+import { BarbeariaEntity } from './barbearias.entity';
+import { CreateBarbeariaDTO } from './barbearia.dto';
 import * as bcrypt from 'bcrypt';
-
-export class CreateBarbeariaDto {
-  nome!: string;
-  cpfCnpj!: string;
-  email!: string;
-  senha!: string;
-  telefone?: string;
-  dataNascimento?: Date;
-  emailValidado?: boolean;
-  telefoneValidado?: boolean;
-  statusAberto?: boolean;
-  validadeLicenca?: Date;
-  cep?: string;
-  uf?: string;
-  cidade?: string;
-  bairro?: string;
-  rua?: string;
-  numero?: string;
-}
 
 @Injectable()
 export class BarbeariasService {
   constructor(
-    @InjectRepository(Barbearia) private readonly repo: Repository<Barbearia>,
-  ) {}
+    @InjectRepository(BarbeariaEntity)
+    private readonly repo: Repository<BarbeariaEntity>,
+  ) { }
 
-  async create(data: CreateBarbeariaDto) {
+  async create(data: CreateBarbeariaDTO) {
+    const existing = await this.findByEmail(data.email);
+
+    if (existing) {
+      throw new ConflictException('Barbearia com este e-mail já cadastrada.');
+    }
+
     const senhaHash = await bcrypt.hash(data.senha, 10);
-    const entity = this.repo.create({ ...data, senha: senhaHash });
+    const { senha, ...entity } = this.repo.create({
+      ...data,
+      senha: senhaHash,
+      dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : undefined,
+      validadeLicenca: data.validadeLicenca ? new Date(data.validadeLicenca) : undefined,
+    });
     return this.repo.save(entity);
   }
 
@@ -39,11 +33,25 @@ export class BarbeariasService {
     return this.repo.find();
   }
 
-  findOne(id: string) {
-    return this.repo.findOne({ where: { id } });
+  async findOne(id: string) {
+    const barbearia = await this.repo.findOne({ where: { id } });
+
+    if (!barbearia) {
+      throw new NotFoundException('Barbearia não encontrada.');
+    }
+
+    return barbearia;
   }
 
   findByEmail(email: string) {
     return this.repo.findOne({ where: { email } });
+  }
+
+  async remove(id: string) {
+    const result = await this.repo.delete({ id });
+
+    if (!result.affected) {
+      throw new NotFoundException('Barbearia não encontrada.');
+    }
   }
 }

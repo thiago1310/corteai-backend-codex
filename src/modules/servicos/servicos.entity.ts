@@ -6,7 +6,7 @@ import {
   ManyToMany,
   OneToMany,
 } from 'typeorm';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { Profissional } from '../profissionais/profissionais.entity';
 import { AgendamentoServico } from '../agendamentos/agendamento-servicos.entity';
 
@@ -29,8 +29,8 @@ export class Servico {
   @Column({ type: 'int' })
   tempoEstimado!: number; // minutos
 
-  @ManyToOne(() => Barbearia, (b) => b.servicos, { onDelete: 'CASCADE' })
-  barbearia!: Barbearia;
+  @ManyToOne(() => BarbeariaEntity, (b) => b.servicos, { onDelete: 'CASCADE' })
+  barbearia!: BarbeariaEntity;
 
   @ManyToMany(() => Profissional, (p) => p.servicos)
   profissionais!: Profissional[];

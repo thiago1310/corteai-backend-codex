@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Barbearia } from './barbearias.entity';
+import { BarbeariaEntity } from './barbearias.entity';
 
 export enum DiaSemana {
   DOMINGO = 'domingo',
@@ -12,12 +12,12 @@ export enum DiaSemana {
 }
 
 @Entity('barbearia_horarios')
-export class BarbeariaHorario {
+export class BarbeariaHorarioEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => Barbearia, (b) => b.horarios, { onDelete: 'CASCADE' })
-  barbearia!: Barbearia;
+  @ManyToOne(() => BarbeariaEntity, (b) => b.horarios, { onDelete: 'CASCADE' })
+  barbearia!: BarbeariaEntity;
 
   @Column({ type: 'enum', enum: DiaSemana })
   diaSemana!: DiaSemana;
@@ -28,4 +28,3 @@ export class BarbeariaHorario {
   @Column({ length: 5 })
   horaFim!: string; // HH:mm
 }
-

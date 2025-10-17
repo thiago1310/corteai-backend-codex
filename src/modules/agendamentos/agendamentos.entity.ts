@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { Profissional } from '../profissionais/profissionais.entity';
 import { Usuario } from '../usuarios/usuarios.entity';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { AgendamentoServico } from './agendamento-servicos.entity';
 
 export enum AgendamentoStatus {
@@ -28,8 +28,8 @@ export class Agendamento {
   @ManyToOne(() => Usuario, (u) => u.agendamentos, { onDelete: 'CASCADE' })
   usuario!: Usuario;
 
-  @ManyToOne(() => Barbearia, (b) => b.agendamentos, { onDelete: 'CASCADE' })
-  barbearia!: Barbearia;
+  @ManyToOne(() => BarbeariaEntity, (b) => b.agendamentos, { onDelete: 'CASCADE' })
+  barbearia!: BarbeariaEntity;
 
   @Column({ type: 'timestamptz' })
   dataInicio!: Date;

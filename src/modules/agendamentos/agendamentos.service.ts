@@ -1,13 +1,12 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { Agendamento, AgendamentoStatus } from './agendamentos.entity';
 import { AgendamentoServico } from './agendamento-servicos.entity';
-import { EntityManager } from 'typeorm';
 import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 import { Profissional } from '../profissionais/profissionais.entity';
 import { Usuario } from '../usuarios/usuarios.entity';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { Servico } from '../servicos/servicos.entity';
 
 export class CreateAgendamentoDto {
@@ -34,7 +33,7 @@ export class AgendamentosService {
     const [profissional, usuario, barbearia] = await Promise.all([
       this.em.findOneByOrFail(Profissional, { id: data.profissionalId }),
       this.em.findOneByOrFail(Usuario, { id: data.usuarioId }),
-      this.em.findOneByOrFail(Barbearia, { id: data.barbeariaId }),
+      this.em.findOneByOrFail(BarbeariaEntity, { id: data.barbeariaId }),
     ]);
 
     const agendamento = this.repo.create({
@@ -51,7 +50,9 @@ export class AgendamentosService {
     if (data.servicosIds?.length) {
       for (const servicoId of data.servicosIds) {
         const servico = await this.em.findOneBy(Servico, { id: servicoId });
-        if (!servico) throw new NotFoundException(`ServiÃ§o ${servicoId} nÃ£o encontrado`);
+        if (!servico) {
+          throw new NotFoundException(`Serviço ${servicoId} não encontrado`);
+        }
         await this.itemRepo.save(this.itemRepo.create({ agendamento: saved, servico }));
       }
     }
@@ -69,3 +70,4 @@ export class AgendamentosService {
     });
   }
 }
+

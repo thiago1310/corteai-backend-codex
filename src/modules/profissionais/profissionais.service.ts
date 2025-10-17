@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Profissional } from './profissionais.entity';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { EntityManager } from 'typeorm';
 import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 
@@ -23,7 +23,7 @@ export class ProfissionaisService {
   ) {}
 
   async create(data: CreateProfissionalDto) {
-    const barbearia = await this.em.findOneByOrFail(Barbearia, {
+    const barbearia = await this.em.findOneByOrFail(BarbeariaEntity, {
       id: data.barbeariaId,
     });
     const entity = this.repo.create({

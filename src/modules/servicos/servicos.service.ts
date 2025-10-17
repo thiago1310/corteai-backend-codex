@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Servico } from './servicos.entity';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 import { EntityManager } from 'typeorm';
 
@@ -21,7 +21,7 @@ export class ServicosService {
   ) {}
 
   async create(data: CreateServicoDto) {
-    const barbearia = await this.em.findOneByOrFail(Barbearia, {
+    const barbearia = await this.em.findOneByOrFail(BarbeariaEntity, {
       id: data.barbeariaId,
     });
     const entity = this.repo.create({

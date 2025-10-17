@@ -1,7 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService, LoginDto } from './auth.service';
 import { UsuariosService, CreateUsuarioDto } from '../usuarios/usuarios.service';
-import { BarbeariasService, CreateBarbeariaDto } from '../barbearias/barbearias.service';
+import { BarbeariasService } from '../barbearias/barbearias.service';
+import { CreateBarbeariaDTO } from '../barbearias/barbearia.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -22,7 +23,7 @@ export class AuthController {
   }
 
   @Post('register/barbearia')
-  registerBarbearia(@Body() body: CreateBarbeariaDto) {
+  registerBarbearia(@Body() body: CreateBarbeariaDTO) {
     return this.barbearias.create(body);
   }
 }

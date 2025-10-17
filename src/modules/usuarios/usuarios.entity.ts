@@ -6,7 +6,7 @@ import {
   OneToMany,
   Index,
 } from 'typeorm';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { Agendamento } from '../agendamentos/agendamentos.entity';
 
 export enum UsuarioTipo {
@@ -42,8 +42,8 @@ export class Usuario {
   @Column({ type: 'enum', enum: UsuarioTipo, default: UsuarioTipo.CLIENTE })
   tipo!: UsuarioTipo;
 
-  @ManyToOne(() => Barbearia, (b) => b.funcionarios, { nullable: true })
-  barbearia?: Barbearia | null;
+  @ManyToOne(() => BarbeariaEntity, (b) => b.funcionarios, { nullable: true })
+  barbearia?: BarbeariaEntity | null;
 
   @OneToMany(() => Agendamento, (a) => a.usuario)
   agendamentos!: Agendamento[];

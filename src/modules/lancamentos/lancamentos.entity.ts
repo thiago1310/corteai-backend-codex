@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 
 export enum LancamentoTipo {
   ENTRADA = 'ENTRADA',
@@ -20,8 +20,8 @@ export class Lancamento {
   @Column({ type: 'enum', enum: LancamentoTipo })
   tipo!: LancamentoTipo;
 
-  @ManyToOne(() => Barbearia, (b) => b.lancamentos, { onDelete: 'CASCADE' })
-  barbearia!: Barbearia;
+  @ManyToOne(() => BarbeariaEntity, (b) => b.lancamentos, { onDelete: 'CASCADE' })
+  barbearia!: BarbeariaEntity;
 
   @Column({ type: 'timestamptz' })
   data!: Date;

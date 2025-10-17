@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lancamento, LancamentoTipo } from './lancamentos.entity';
-import { Barbearia } from '../barbearias/barbearias.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 import { EntityManager } from 'typeorm';
 
@@ -22,7 +22,7 @@ export class LancamentosService {
   ) {}
 
   async create(data: CreateLancamentoDto) {
-    const barbearia = await this.em.findOneByOrFail(Barbearia, { id: data.barbeariaId });
+    const barbearia = await this.em.findOneByOrFail(BarbeariaEntity, { id: data.barbeariaId });
     const entity = this.repo.create({
       descricao: data.descricao,
       valor: data.valor,
