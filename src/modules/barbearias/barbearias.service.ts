@@ -23,8 +23,10 @@ export class BarbeariasService {
     const entity = await this.repo.create({
       ...data,
       senha: senhaHash,
+      emailValidado: false,
+      telefoneValidado: false,
       dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : undefined,
-      validadeLicenca: data.validadeLicenca ? new Date(data.validadeLicenca) : undefined,
+      validadeLicenca: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 30)),
     });
     await this.repo.save(entity);
     const { senha, ...entitySemSenha } = entity;
