@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { Profissional } from '../profissionais/profissionais.entity';
 import { Servico } from '../servicos/servicos.entity';
-import { BarbeariaHorarioEntity } from './barbearia-horarios.entity';
+import { HorarioFuncionamento } from './horario-funcionamento.entity';
 import { Agendamento } from '../agendamentos/agendamentos.entity';
 import { Faq } from '../faq/faq.entity';
 import { Lancamento } from '../lancamentos/lancamentos.entity';
@@ -72,8 +72,8 @@ export class BarbeariaEntity {
   @OneToMany(() => Servico, (s) => s.barbearia)
   servicos!: Servico[];
 
-  @OneToMany(() => BarbeariaHorarioEntity, (h) => h.barbearia)
-  horarios!: BarbeariaHorarioEntity[];
+  @OneToMany(() => HorarioFuncionamento, (h) => h.barbearia)
+  horarios!: HorarioFuncionamento[];
 
   @OneToMany(() => Agendamento, (a) => a.barbearia)
   agendamentos!: Agendamento[];

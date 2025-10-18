@@ -1,11 +1,23 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { BarbeariasService } from './barbearias.service';
 import { CreateBarbeariaDTO, UpdateBarbeariaDTO } from './barbearia.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UpsertHorarioFuncionamentoDTO } from './horario-funcionamento.dto';
 
 @Controller('barbearias')
 export class BarbeariasController {
-  constructor(private readonly service: BarbeariasService) { }
+  constructor(private readonly service: BarbeariasService) {}
 
   // @Post()
   // @UseGuards(JwtAuthGuard)
@@ -26,14 +38,35 @@ export class BarbeariasController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: UpdateBarbeariaDTO, @Req() request) {
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateBarbeariaDTO,
+    @Req() request,
+  ) {
     console.log(request.user);
     if (id != request.user.sub) {
-      throw new UnauthorizedException('Não autorizado.')
+      throw new UnauthorizedException('Nao autorizado.');
     }
     return this.service.update(id, body);
   }
 
+  @Get(':id/horarios')
+  listHorarios(@Param('id') id: string) {
+    return this.service.listHorarios(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/horarios')
+  upsertHorarios(
+    @Param('id') id: string,
+    @Body() body: UpsertHorarioFuncionamentoDTO,
+    @Req() request,
+  ) {
+    if (id != request.user.sub) {
+      throw new UnauthorizedException('Nao autorizado.');
+    }
+    return this.service.replaceHorarios(id, body);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
