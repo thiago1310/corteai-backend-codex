@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Profissional } from './profissionais.entity';
@@ -44,10 +44,17 @@ export class ProfissionaisService {
     return this.repo.find({ relations: ['barbearia'] });
   }
 
-  async updatePassword(id: string, novaSenha: string) {
+  async updatePassword(id: string, senhaAtual: string, novaSenha: string) {
     const profissional = await this.repo.findOne({ where: { id } });
     if (!profissional) {
       throw new NotFoundException('Profissional nao encontrado.');
+    }
+    if (!profissional.senha) {
+      throw new BadRequestException('Profissional sem senha cadastrada.');
+    }
+    const senhaConfere = await bcrypt.compare(senhaAtual, profissional.senha);
+    if (!senhaConfere) {
+      throw new BadRequestException('Senha atual incorreta.');
     }
     const senhaHash = await bcrypt.hash(novaSenha, 10);
     await this.repo.update({ id }, { senha: senhaHash });

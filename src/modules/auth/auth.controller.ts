@@ -11,6 +11,10 @@ class ChangePasswordBody implements ChangePasswordDto {
 
   @IsString()
   @MinLength(6)
+  senhaAtual!: string;
+
+  @IsString()
+  @MinLength(6)
   novaSenha!: string;
 
   @IsIn(['barbearia', 'profissional'])

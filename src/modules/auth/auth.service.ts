@@ -17,6 +17,7 @@ export type PasswordChangeScope = 'barbearia' | 'profissional';
 
 export interface ChangePasswordDto {
   id: string;
+  senhaAtual: string;
   novaSenha: string;
   scope: PasswordChangeScope;
 }
@@ -62,12 +63,16 @@ export class AuthService {
 
   async changePassword(dto: ChangePasswordDto) {
     if (dto.scope === 'barbearia') {
-      await this.barbearias.updatePassword(dto.id, dto.novaSenha);
+      await this.barbearias.updatePassword(dto.id, dto.senhaAtual, dto.novaSenha);
       return { success: true };
     }
 
     if (dto.scope === 'profissional') {
-      await this.profissionais.updatePassword(dto.id, dto.novaSenha);
+      await this.profissionais.updatePassword(
+        dto.id,
+        dto.senhaAtual,
+        dto.novaSenha,
+      );
       return { success: true };
     }
 
