@@ -10,6 +10,15 @@ export class ChatHistoryEntity {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'now()' })
   createdAt!: Date;
 
+  @Column({ name: 'barbearia_id', type: 'uuid' })
+  barbeariaId!: string;
+
+  @Column({ name: 'barbearia_phone', type: 'text', nullable: true })
+  telefoneBarbearia?: string | null;
+
+  @Column({ name: 'customer_phone', type: 'text', nullable: true })
+  telefoneCliente?: string | null;
+
   @Column({ type: 'varchar', length: 20 })
   role!: ChatRole;
 

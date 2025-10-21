@@ -1,10 +1,25 @@
-import { Body, Controller, Get, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AiAgentService } from './ai-agent.service';
-import { AskDto } from './dto/ask.dto';
-import { TrainDto } from './dto/train.dto';
-import { TenantSchema } from './decorators/tenant-schema.decorator';
+import { PerguntarDto } from './dto/perguntar.dto';
+import { TreinamentoDto } from './dto/treinamento.dto';
+import {
+  AtualizarConhecimentoDto,
+  ConsultaConhecimentoDto,
+  CriarConhecimentoDto,
+} from './dto/conhecimento.dto';
 
-@Controller('ai')
+@Controller('ia')
 @UsePipes(
   new ValidationPipe({
     transform: true,
@@ -13,31 +28,48 @@ import { TenantSchema } from './decorators/tenant-schema.decorator';
   }),
 )
 export class AiAgentController {
-  constructor(private readonly aiAgentService: AiAgentService) { }
+  constructor(private readonly aiAgentService: AiAgentService) {}
 
-  @Post('ask')
-  async ask(@Body() dto: AskDto, @TenantSchema() schema: string) {
-
-    const response = await this.aiAgentService.ask(dto);
-    return { schema, ...response };
+  @Post('perguntar')
+  async perguntar(@Body() dto: PerguntarDto) {
+    return this.aiAgentService.perguntar(dto);
   }
 
-  @Post('train')
-  async train(@Body() dto: TrainDto, @TenantSchema() schema: string) {
-    const result = await this.aiAgentService.train(dto);
-    return { schema, ...result };
+  @Post('treinar')
+  async treinar(@Body() dto: TreinamentoDto) {
+    return this.aiAgentService.treinar(dto);
   }
 
-  @Get('history')
-  async history(@Query('limit') limit = 20, @TenantSchema() schema: string) {
-    const parsedLimit = Number(limit) || 20;
-    const history = await this.aiAgentService.getHistory(parsedLimit);
-    return { schema, history };
+  @Get('base-conhecimento')
+  async listarBase(@Query() query: ConsultaConhecimentoDto) {
+    return this.aiAgentService.listarBaseConhecimento(query.barbeariaId);
   }
 
-  @Get('debug/schema')
-  async debugSchema(@TenantSchema() schema: string) {
-    const active = await this.aiAgentService.getActiveSchema();
-    return { requested: schema, active };
+  @Post('base-conhecimento')
+  async criarConhecimento(@Body() dto: CriarConhecimentoDto) {
+    return this.aiAgentService.criarConhecimento(dto);
+  }
+
+  @Patch('base-conhecimento/:id')
+  async atualizarConhecimento(
+    @Param('id') id: string,
+    @Query() query: ConsultaConhecimentoDto,
+    @Body() dto: AtualizarConhecimentoDto,
+  ) {
+    return this.aiAgentService.atualizarConhecimento(id, query.barbeariaId, dto);
+  }
+
+  @Delete('base-conhecimento/:id')
+  async removerConhecimento(
+    @Param('id') id: string,
+    @Query() query: ConsultaConhecimentoDto,
+  ) {
+    return this.aiAgentService.removerConhecimento(id, query.barbeariaId);
+  }
+
+  @Get('historico')
+  async listarHistorico(@Query('limite') limite = 20) {
+    const valorLimite = Number(limite) || 20;
+    return this.aiAgentService.listarHistorico(valorLimite);
   }
 }

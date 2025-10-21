@@ -6,14 +6,23 @@ import { EmbeddingService } from './services/embedding.service';
 import { RagService } from './services/rag.service';
 import { DocumentEntity } from './entities/document.entity';
 import { ChatHistoryEntity } from './entities/chat-history.entity';
-import { TenantEntity } from './entities/tenant.entity';
-import { TenantContextService } from './tenant/tenant-context.service';
-import { TenantSchemaService } from './tenant/tenant-schema.service';
+import { ChatMessageEntity } from './entities/chat-message.entity';
+import { DadosClienteEntity } from './entities/dados-cliente.entity';
+import { BaseConhecimentoService } from './services/base-conhecimento.service';
+import { N8nChatHistoryEntity } from './entities/n8n-chat-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DocumentEntity, ChatHistoryEntity, TenantEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      DocumentEntity,
+      ChatHistoryEntity,
+      ChatMessageEntity,
+      DadosClienteEntity,
+      N8nChatHistoryEntity,
+    ]),
+  ],
   controllers: [AiAgentController],
-  providers: [AiAgentService, EmbeddingService, RagService, TenantContextService, TenantSchemaService],
-  exports: [AiAgentService, TenantContextService, TenantSchemaService],
+  providers: [AiAgentService, EmbeddingService, RagService, BaseConhecimentoService],
+  exports: [AiAgentService],
 })
 export class AiAgentModule {}
