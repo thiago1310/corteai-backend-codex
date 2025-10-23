@@ -96,6 +96,8 @@ export class AiAgentController {
   @Post('evolution/sessao')
   async criarSessaoEvolution(@Req() req) {
     const barbeariaId = this.barbeariaIdOuErro(req);
+    const sessao = await this.aiAgentService.buscarSessaoEvolution(barbeariaId)
+    if (sessao) return sessao;
     return this.aiAgentService.criarSessaoEvolution(barbeariaId);
   }
 

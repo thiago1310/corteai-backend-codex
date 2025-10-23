@@ -17,10 +17,8 @@ interface CriarSessaoResponse {
 
 interface GerarQrcodeResponse {
   status?: string;
-  qrcode?: {
-    code?: string;
-    base64?: string;
-  };
+  code?: string;
+  base64?: string;
   message?: string;
 }
 
@@ -127,16 +125,12 @@ export class EvolutionApiService {
     }
 
     try {
-      const resposta = await fetch(`${this.apiUrl}/v1.8/instance/qrcode`, {
-        method: 'POST',
+      const resposta = await fetch(`${this.apiUrl}/instance/connect/${instanceName}`, {
+        method: 'get',
         headers: {
           'Content-Type': 'application/json',
           apikey: this.apiKey,
-        },
-        body: JSON.stringify({
-          instanceName,
-          base64: true,
-        }),
+        }
       });
 
       const dados = (await resposta.json()) as GerarQrcodeResponse;
@@ -147,7 +141,7 @@ export class EvolutionApiService {
         );
         throw new InternalServerErrorException('Nao foi possivel gerar o QRCode na Evolution API.');
       }
-
+      console.log(dados)
       return dados;
     } catch (error) {
       const err = error as Error;
