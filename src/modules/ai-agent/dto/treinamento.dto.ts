@@ -33,8 +33,9 @@ export class RegistroTreinamentoDto {
 }
 
 export class TreinamentoDto {
+  @IsOptional()
   @IsUUID()
-  barbeariaId!: string;
+  barbeariaId?: string;
 
   @IsArray()
   @ArrayNotEmpty()

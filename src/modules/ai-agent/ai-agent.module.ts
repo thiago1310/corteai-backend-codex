@@ -10,6 +10,8 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 import { DadosClienteEntity } from './entities/dados-cliente.entity';
 import { BaseConhecimentoService } from './services/base-conhecimento.service';
 import { N8nChatHistoryEntity } from './entities/n8n-chat-history.entity';
+import { EvolutionApiService } from './services/evolution-api.service';
+import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 
 @Module({
   imports: [
@@ -19,10 +21,17 @@ import { N8nChatHistoryEntity } from './entities/n8n-chat-history.entity';
       ChatMessageEntity,
       DadosClienteEntity,
       N8nChatHistoryEntity,
+      ConexaoEvolutionEntity,
     ]),
   ],
   controllers: [AiAgentController],
-  providers: [AiAgentService, EmbeddingService, RagService, BaseConhecimentoService],
+  providers: [
+    AiAgentService,
+    EmbeddingService,
+    RagService,
+    BaseConhecimentoService,
+    EvolutionApiService,
+  ],
   exports: [AiAgentService],
 })
 export class AiAgentModule {}

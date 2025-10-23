@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
   DocumentoConhecimentoAtualizacao,
@@ -40,6 +40,10 @@ export class BaseConhecimentoService {
   }
 
   async criar(dto: CriarConhecimentoDto) {
+    if (!dto.barbeariaId) {
+      throw new BadRequestException('Identificador da barbearia é obrigatório.');
+    }
+
     const entrada: DocumentoConhecimentoInput = {
       barbeariaId: dto.barbeariaId,
       pergunta: dto.pergunta,
@@ -53,6 +57,10 @@ export class BaseConhecimentoService {
   }
 
   async atualizar(id: string, barbeariaId: string, dto: AtualizarConhecimentoDto) {
+    if (!barbeariaId) {
+      throw new BadRequestException('Identificador da barbearia é obrigatório.');
+    }
+
     const atualizacao: DocumentoConhecimentoAtualizacao = {};
 
     if (dto.pergunta !== undefined) {

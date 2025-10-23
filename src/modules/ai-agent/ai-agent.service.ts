@@ -1,41 +1,49 @@
-import { Injectable } from '@nestjs/common';
+﻿import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { RagService } from './services/rag.service';
+import { BaseConhecimentoService } from './services/base-conhecimento.service';
+import { EvolutionApiService } from './services/evolution-api.service';
+
 import { PerguntarDto } from './dto/perguntar.dto';
 import { TreinamentoDto } from './dto/treinamento.dto';
 import { ContextoDto } from './dto/contexto.dto';
-import {
-  AtualizarConhecimentoDto,
-  CriarConhecimentoDto,
-} from './dto/conhecimento.dto';
-import { BaseConhecimentoService } from './services/base-conhecimento.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { AtualizarConhecimentoDto, CriarConhecimentoDto } from './dto/conhecimento.dto';
+
 import { ChatHistoryEntity } from './entities/chat-history.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { DadosClienteEntity } from './entities/dados-cliente.entity';
+import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 
 @Injectable()
 export class AiAgentService {
   constructor(
     private readonly ragService: RagService,
     private readonly baseConhecimento: BaseConhecimentoService,
+    private readonly evolutionApi: EvolutionApiService,
     @InjectRepository(ChatHistoryEntity)
     private readonly historicoRepo: Repository<ChatHistoryEntity>,
     @InjectRepository(ChatMessageEntity)
     private readonly mensagensRepo: Repository<ChatMessageEntity>,
     @InjectRepository(DadosClienteEntity)
     private readonly dadosClienteRepo: Repository<DadosClienteEntity>,
+    @InjectRepository(ConexaoEvolutionEntity)
+    private readonly conexaoRepo: Repository<ConexaoEvolutionEntity>,
   ) {}
 
   async perguntar(dto: PerguntarDto) {
-    await this.registrarHistorico('user', dto);
+    const barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
+    dto.barbeariaId = barbeariaId;
 
-    const respostaRag = await this.ragService.perguntar(dto.pergunta, dto.barbeariaId);
+    await this.registrarHistorico('user', dto, barbeariaId);
 
-    await this.registrarHistorico('assistant', dto, respostaRag.resposta);
-    await this.registrarMensagem(dto, respostaRag.resposta);
-    await this.atualizarCliente(dto);
+    const respostaRag = await this.ragService.perguntar(dto.pergunta, barbeariaId);
+
+    await this.registrarHistorico('assistant', dto, barbeariaId, respostaRag.resposta);
+    await this.registrarMensagem(dto, barbeariaId, respostaRag.resposta);
+    await this.atualizarCliente(dto, barbeariaId);
 
     const contextos = plainToInstance(ContextoDto, respostaRag.contextos, {
       excludeExtraneousValues: true,
@@ -48,6 +56,9 @@ export class AiAgentService {
   }
 
   async treinar(dto: TreinamentoDto) {
+    const barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
+    dto.barbeariaId = barbeariaId;
+
     const registrosCriados: Record<string, unknown>[] = [];
 
     for (const registro of dto.registros) {
@@ -60,7 +71,7 @@ export class AiAgentService {
           : undefined;
 
       const conhecimento = await this.baseConhecimento.criar({
-        barbeariaId: dto.barbeariaId,
+        barbeariaId,
         pergunta: registro.pergunta,
         resposta: registro.resposta,
         ativo: registro.ativo ?? true,
@@ -81,6 +92,7 @@ export class AiAgentService {
   }
 
   criarConhecimento(dto: CriarConhecimentoDto) {
+    dto.barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
     return this.baseConhecimento.criar(dto);
   }
 
@@ -92,8 +104,88 @@ export class AiAgentService {
     return this.baseConhecimento.remover(id, barbeariaId);
   }
 
-  async listarHistorico(limite = 20) {
+  async criarSessaoEvolution(barbeariaId: string) {
+    const instanceName = this.normalizarUsuarioId(barbeariaId);
+    const resposta = await this.evolutionApi.criarSessao(instanceName);
+
+    const registroExistente = await this.conexaoRepo.findOne({
+      where: { barbeariaId },
+    });
+
+    const conexao =
+      registroExistente ??
+      this.conexaoRepo.create({
+        barbeariaId,
+        instanceName,
+      });
+
+    conexao.instanceName = instanceName;
+    conexao.status = resposta.status ?? 'created';
+
+    await this.conexaoRepo.save(conexao);
+
+    return {
+      conexao: {
+        id: conexao.id,
+        barbeariaId: conexao.barbeariaId,
+        instanceName: conexao.instanceName,
+        status: conexao.status,
+        atualizadoEm: conexao.atualizadoEm,
+      },
+      qrcode: {
+        code: resposta.qrcode?.code ?? null,
+        base64: resposta.qrcode?.base64 ?? null,
+      },
+    };
+  }
+
+  async buscarSessaoEvolution(barbeariaId: string) {
+    const conexao = await this.conexaoRepo.findOne({
+      where: { barbeariaId },
+    });
+
+    if (!conexao) {
+      return null;
+    }
+
+    let qrcode: { code: string | null; base64: string | null } | null = null;
+
+    const estaConectado = this.conexaoEstabelecida(conexao.status);
+    const ultimaAtualizacao = conexao.atualizadoEm
+      ? new Date(conexao.atualizadoEm).getTime()
+      : 0;
+
+    if (!estaConectado) {
+      const resposta = await this.evolutionApi.gerarQrcode(conexao.instanceName);
+      qrcode = {
+        code: resposta.qrcode?.code ?? null,
+        base64: resposta.qrcode?.base64 ?? null,
+      };
+
+      const statusAlterado = resposta.status !== undefined && resposta.status !== conexao.status;
+      if (statusAlterado) {
+        conexao.status = resposta.status ?? conexao.status;
+      }
+
+      const deveRegenerar = Date.now() - ultimaAtualizacao > 30_000;
+      if (deveRegenerar || statusAlterado) {
+        await this.conexaoRepo.save(conexao);
+      }
+    }
+
+    return {
+      id: conexao.id,
+      barbeariaId: conexao.barbeariaId,
+      instanceName: conexao.instanceName,
+      status: conexao.status,
+      atualizadoEm: conexao.atualizadoEm,
+      qrcode,
+    };
+  }
+
+  async listarHistorico(barbeariaId: string, limite = 20) {
     const historico = await this.historicoRepo.find({
+      where: { barbeariaId },
       order: { createdAt: 'DESC' },
       take: limite,
     });
@@ -112,10 +204,11 @@ export class AiAgentService {
   private async registrarHistorico(
     papel: 'user' | 'assistant',
     dto: PerguntarDto,
+    barbeariaId: string,
     mensagem?: string,
   ) {
     const registro = this.historicoRepo.create({
-      barbeariaId: dto.barbeariaId,
+      barbeariaId,
       telefoneBarbearia: dto.telefoneBarbearia ?? null,
       telefoneCliente: dto.telefoneCliente ?? null,
       role: papel,
@@ -124,9 +217,9 @@ export class AiAgentService {
     await this.historicoRepo.save(registro);
   }
 
-  private async registrarMensagem(dto: PerguntarDto, respostaBot: string) {
+  private async registrarMensagem(dto: PerguntarDto, barbeariaId: string, respostaBot: string) {
     const mensagem = this.mensagensRepo.create({
-      barbeariaId: dto.barbeariaId,
+      barbeariaId,
       telefone: dto.telefoneCliente ?? null,
       nomeWhatsApp: dto.nomeCliente ?? null,
       mensagemBot: respostaBot,
@@ -136,14 +229,14 @@ export class AiAgentService {
     await this.mensagensRepo.save(mensagem);
   }
 
-  private async atualizarCliente(dto: PerguntarDto) {
+  private async atualizarCliente(dto: PerguntarDto, barbeariaId: string) {
     if (!dto.telefoneCliente) {
       return;
     }
 
     const existente = await this.dadosClienteRepo.findOne({
       where: {
-        barbeariaId: dto.barbeariaId,
+        barbeariaId,
         telefone: dto.telefoneCliente,
       },
     });
@@ -156,11 +249,31 @@ export class AiAgentService {
     }
 
     const novo = this.dadosClienteRepo.create({
-      barbeariaId: dto.barbeariaId,
+      barbeariaId,
       telefone: dto.telefoneCliente,
       nomeWhatsApp: dto.nomeCliente ?? null,
       atendimentoIa: 'reativada',
     });
     await this.dadosClienteRepo.save(novo);
   }
+
+  private normalizarUsuarioId(usuarioId: string) {
+    return usuarioId.replace(/-/g, '');
+  }
+
+  private exigirBarbeariaId(id?: string): string {
+    if (!id) {
+      throw new BadRequestException('Identificador da barbearia nao fornecido.');
+    }
+    return id;
+  }
+
+  private conexaoEstabelecida(status?: string | null) {
+    if (!status) {
+      return false;
+    }
+    const normalizado = status.toString().toLowerCase();
+    return normalizado === 'connected' || normalizado === 'open';
+  }
 }
+

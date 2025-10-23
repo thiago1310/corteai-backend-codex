@@ -6,8 +6,9 @@ export class PerguntarDto {
   @MaxLength(4000)
   pergunta!: string;
 
+  @IsOptional()
   @IsUUID()
-  barbeariaId!: string;
+  barbeariaId?: string;
 
   @IsOptional()
   @IsString()

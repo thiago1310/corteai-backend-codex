@@ -9,8 +9,9 @@ import {
 } from 'class-validator';
 
 export class CriarConhecimentoDto {
+  @IsOptional()
   @IsUUID()
-  barbeariaId!: string;
+  barbeariaId?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -50,7 +51,4 @@ export class AtualizarConhecimentoDto {
   metadados?: Record<string, unknown> | null;
 }
 
-export class ConsultaConhecimentoDto {
-  @IsUUID()
-  barbeariaId!: string;
-}
+export class ConsultaConhecimentoDto {}
