@@ -6,6 +6,7 @@
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -20,6 +21,7 @@ import {
   AtualizarConhecimentoDto,
   CriarConhecimentoDto,
 } from './dto/conhecimento.dto';
+import { SalvarConfiguracaoAgenteDto } from './dto/configuracao-agente.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('ia')
@@ -80,6 +82,19 @@ export class AiAgentController {
     return this.aiAgentService.removerConhecimento(id, barbeariaId);
   }
 
+  @Get('configuracao')
+  async obterConfiguracao(@Req() req) {
+    const barbeariaId = this.barbeariaIdOuErro(req);
+    return this.aiAgentService.obterConfiguracaoAgente(barbeariaId);
+  }
+
+  @Put('configuracao')
+  async salvarConfiguracao(@Req() req, @Body() dto: SalvarConfiguracaoAgenteDto) {
+    const barbeariaId = this.barbeariaIdOuErro(req);
+    return this.aiAgentService.salvarConfiguracaoAgente(barbeariaId, dto);
+  }
+
+
   @Get('historico')
   async listarHistorico(@Req() req, @Query('limite') limite = 20) {
     const barbeariaId = this.barbeariaIdOuErro(req);
@@ -96,8 +111,10 @@ export class AiAgentController {
   @Post('evolution/sessao')
   async criarSessaoEvolution(@Req() req) {
     const barbeariaId = this.barbeariaIdOuErro(req);
-    const sessao = await this.aiAgentService.buscarSessaoEvolution(barbeariaId)
-    if (sessao) return sessao;
+    const sessao = await this.aiAgentService.buscarSessaoEvolution(barbeariaId);
+    if (sessao) {
+      return sessao;
+    }
     return this.aiAgentService.criarSessaoEvolution(barbeariaId);
   }
 
@@ -112,6 +129,12 @@ export class AiAgentController {
     return String(usuario.sub);
   }
 }
+
+
+
+
+
+
 
 
 

@@ -12,6 +12,7 @@ import { BaseConhecimentoService } from './services/base-conhecimento.service';
 import { N8nChatHistoryEntity } from './entities/n8n-chat-history.entity';
 import { EvolutionApiService } from './services/evolution-api.service';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
+import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
       DadosClienteEntity,
       N8nChatHistoryEntity,
       ConexaoEvolutionEntity,
+      ConfiguracaoAgenteEntity,
     ]),
   ],
   controllers: [AiAgentController],

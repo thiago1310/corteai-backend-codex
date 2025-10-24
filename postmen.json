@@ -1,8 +1,8 @@
-{
+﻿{
   "info": {
     "_postman_id": "8a706388-0e9a-4c40-9b9f-5c6c1f6335d1",
-    "name": "CorteAI - Módulo IA",
-    "description": "Coleção de rotas protegidas do módulo de IA (barbearia).",
+    "name": "CorteAI - Modulo IA",
+    "description": "Colecao de rotas protegidas do modulo de IA (barbearia).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -17,7 +17,7 @@
         "url": { "raw": "{{baseUrl}}/ia/perguntar", "host": ["{{baseUrl}}"], "path": ["ia", "perguntar"] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"pergunta\": \"Quais serviços vocês oferecem?\",\n  \"telefoneCliente\": \"+5511999999999\",\n  \"nomeCliente\": \"Maria\",\n  \"telefoneBarbearia\": \"+5511888888888\"\n}"
+          "raw": "{\n  \"pergunta\": \"Quais servicos voces oferecem?\",\n  \"telefoneCliente\": \"+5511999999999\",\n  \"nomeCliente\": \"Maria\",\n  \"telefoneBarbearia\": \"+5511888888888\"\n}"
         }
       }
     },
@@ -32,7 +32,32 @@
         "url": { "raw": "{{baseUrl}}/ia/treinar", "host": ["{{baseUrl}}"], "path": ["ia", "treinar"] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"origem\": \"Painel\",\n  \"registros\": [\n    {\n      \"pergunta\": \"Qual o horário de funcionamento?\",\n      \"resposta\": \"Funcionamos de segunda a sábado das 9h às 19h.\",\n      \"ativo\": true\n    },\n    {\n      \"pergunta\": \"Aceitam cartão?\",\n      \"resposta\": \"Sim, débito, crédito e PIX.\",\n      \"ativo\": true\n    }\n  ]\n}"
+          "raw": "{\n  \"origem\": \"Painel\",\n  \"registros\": [\n    {\n      \"pergunta\": \"Qual o horario de funcionamento?\",\n      \"resposta\": \"Funcionamos de segunda a sabado das 9h as 19h.\",\n      \"ativo\": true\n    },\n    {\n      \"pergunta\": \"Aceitam cartao?\",\n      \"resposta\": \"Sim, debito, credito e PIX.\",\n      \"ativo\": true\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "Obter Configuracao do Agente",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/configuracao", "host": ["{{baseUrl}}"], "path": ["ia", "configuracao"] }
+      }
+    },
+    {
+      "name": "Salvar Configuracao do Agente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/configuracao", "host": ["{{baseUrl}}"], "path": ["ia", "configuracao"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nomeAgente\": \"Assistente CorteAI\",\n  \"promptSistema\": \"Voce e um recepcionista virtual especializado em barbeiros.\"\n}"
         }
       }
     },
@@ -57,7 +82,7 @@
         "url": { "raw": "{{baseUrl}}/ia/base-conhecimento", "host": ["{{baseUrl}}"], "path": ["ia", "base-conhecimento"] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"pergunta\": \"Vocês fazem barba?\",\n  \"resposta\": \"Sim, fazemos barba com duração média de 20 minutos.\",\n  \"ativo\": true,\n  \"metadados\": { \"categoria\": \"servicos\" }\n}"
+          "raw": "{\n  \"pergunta\": \"Voces fazem barba?\",\n  \"resposta\": \"Sim, fazemos barba com duracao media de 20 minutos.\",\n  \"ativo\": true,\n  \"metadados\": { \"categoria\": \"servicos\" }\n}"
         }
       }
     },
@@ -72,7 +97,7 @@
         "url": { "raw": "{{baseUrl}}/ia/base-conhecimento/{{conhecimentoId}}", "host": ["{{baseUrl}}"], "path": ["ia", "base-conhecimento", "{{conhecimentoId}}"] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"resposta\": \"Sim, fazemos barba a partir de R$ 35,00 com duração de 20 minutos.\",\n  \"ativo\": true\n}"
+          "raw": "{\n  \"resposta\": \"Sim, fazemos barba a partir de R$ 35,00 com duracao de 20 minutos.\",\n  \"ativo\": true\n}"
         }
       }
     },
@@ -87,7 +112,7 @@
       }
     },
     {
-      "name": "Histórico de Mensagens",
+      "name": "Historico de Mensagens",
       "request": {
         "method": "GET",
         "header": [
@@ -102,7 +127,7 @@
       }
     },
     {
-      "name": "Criar Sessão Evolution",
+      "name": "Criar Sessao Evolution",
       "request": {
         "method": "POST",
         "header": [
@@ -112,7 +137,7 @@
       }
     },
     {
-      "name": "Buscar Sessão Evolution",
+      "name": "Buscar Sessao Evolution",
       "request": {
         "method": "GET",
         "header": [

@@ -11,11 +11,16 @@ import { PerguntarDto } from './dto/perguntar.dto';
 import { TreinamentoDto } from './dto/treinamento.dto';
 import { ContextoDto } from './dto/contexto.dto';
 import { AtualizarConhecimentoDto, CriarConhecimentoDto } from './dto/conhecimento.dto';
+import {
+  ConfiguracaoAgenteDto,
+  SalvarConfiguracaoAgenteDto,
+} from './dto/configuracao-agente.dto';
 
 import { ChatHistoryEntity } from './entities/chat-history.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { DadosClienteEntity } from './entities/dados-cliente.entity';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
+import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
 
 @Injectable()
 export class AiAgentService {
@@ -31,6 +36,8 @@ export class AiAgentService {
     private readonly dadosClienteRepo: Repository<DadosClienteEntity>,
     @InjectRepository(ConexaoEvolutionEntity)
     private readonly conexaoRepo: Repository<ConexaoEvolutionEntity>,
+    @InjectRepository(ConfiguracaoAgenteEntity)
+    private readonly configuracaoRepo: Repository<ConfiguracaoAgenteEntity>,
   ) { }
 
   async perguntar(dto: PerguntarDto) {
@@ -102,6 +109,32 @@ export class AiAgentService {
 
   removerConhecimento(id: string, barbeariaId: string) {
     return this.baseConhecimento.remover(id, barbeariaId);
+  }
+
+  async obterConfiguracaoAgente(barbeariaId: string): Promise<ConfiguracaoAgenteDto | null> {
+    const configuracao = await this.configuracaoRepo.findOne({ where: { barbeariaId } });
+    return configuracao ? this.mapearConfiguracao(configuracao) : null;
+  }
+
+  async salvarConfiguracaoAgente(
+    barbeariaId: string,
+    dto: SalvarConfiguracaoAgenteDto,
+  ): Promise<ConfiguracaoAgenteDto> {
+    let configuracao = await this.configuracaoRepo.findOne({ where: { barbeariaId } });
+
+    if (!configuracao) {
+      configuracao = this.configuracaoRepo.create({
+        barbeariaId,
+        nomeAgente: dto.nomeAgente,
+        promptSistema: dto.promptSistema,
+      });
+    } else {
+      configuracao.nomeAgente = dto.nomeAgente;
+      configuracao.promptSistema = dto.promptSistema;
+    }
+
+    const salvo = await this.configuracaoRepo.save(configuracao);
+    return this.mapearConfiguracao(salvo);
   }
 
   async criarSessaoEvolution(barbeariaId: string) {
@@ -275,5 +308,14 @@ export class AiAgentService {
     const normalizado = status.toString().toLowerCase();
     return normalizado === 'connected' || normalizado === 'open';
   }
-}
 
+  private mapearConfiguracao(config: ConfiguracaoAgenteEntity): ConfiguracaoAgenteDto {
+    return {
+      id: config.id,
+      barbeariaId: config.barbeariaId,
+      nomeAgente: config.nomeAgente,
+      promptSistema: config.promptSistema,
+      atualizadoEm: config.atualizadoEm,
+    };
+  }
+}
