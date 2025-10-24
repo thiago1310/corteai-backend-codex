@@ -171,6 +171,16 @@
       }
     },
     {
+      "name": "Remover Instancia Evolution",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/evolution/instancia", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "instancia"] }
+      }
+    },
+    {
       "name": "Buscar Sessao Evolution",
       "request": {
         "method": "GET",

@@ -142,4 +142,30 @@ export class EvolutionApiService {
       throw new InternalServerErrorException('Falha ao gerar QRCode na Evolution API.');
     }
   }
+
+  async deletarInstancia(instanceName: string): Promise<void> {
+    this.ensureApiKey();
+
+    try {
+      const resposta = await fetch(`${this.apiUrl}/instance/delete/${instanceName}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: this.apiKey,
+        },
+      });
+
+      if (!resposta.ok) {
+        const texto = await resposta.text();
+        this.logger.error(
+          `Falha ao remover instancia na Evolution API: ${resposta.status} - ${texto}`,
+        );
+        throw new InternalServerErrorException('Nao foi possivel remover a instancia na Evolution API.');
+      }
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error('Erro ao remover instancia na Evolution API', err.stack);
+      throw new InternalServerErrorException('Falha ao remover a instancia na Evolution API.');
+    }
+  }
 }

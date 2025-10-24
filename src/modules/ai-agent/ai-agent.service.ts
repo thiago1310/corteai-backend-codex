@@ -283,6 +283,25 @@ export class AiAgentService {
     };
   }
 
+  async removerInstanciaEvolution(barbeariaId: string) {
+    const conexao = await this.conexaoRepo.findOne({
+      where: { barbeariaId },
+    });
+
+    if (!conexao) {
+      throw new BadRequestException('Nenhuma instancia Evolution encontrada para esta barbearia.');
+    }
+
+    const instanceName = this.normalizarUsuarioId(conexao.instanceName ?? barbeariaId);
+    await this.evolutionApi.deletarInstancia(instanceName);
+    await this.conexaoRepo.delete({ id: conexao.id });
+
+    return {
+      removido: true,
+      instanceName,
+    };
+  }
+
   async listarHistorico(barbeariaId: string, limite = 20) {
     const historico = await this.historicoRepo.find({
       where: { barbeariaId },

@@ -142,6 +142,13 @@ export class AiAgentController {
     return this.aiAgentService.obterDetalhesInstancia(barbeariaId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Delete('evolution/instancia')
+  async removerInstanciaEvolution(@Req() req) {
+    const barbeariaId = this.barbeariaIdOuErro(req);
+    return this.aiAgentService.removerInstanciaEvolution(barbeariaId);
+  }
+
   private barbeariaIdOuErro(req: any): string {
     const usuario = req?.user;
     if (!usuario || usuario.scope !== 'barbearia') {
