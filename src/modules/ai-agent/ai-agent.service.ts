@@ -261,12 +261,14 @@ export class AiAgentService {
   async obterDetalhesInstancia(barbeariaId: string) {
     const instanceName = this.normalizarUsuarioId(barbeariaId);
     const instancias = await this.evolutionApi.buscarInstancias();
+    console.log('instancias', instancias)
     const detalhe = instancias.find(
       (item) =>
-        typeof item.instanceName === 'string' &&
-        item.instanceName.toLowerCase() === instanceName.toLowerCase(),
+
+        item.instanceName.replace(/-/g, '').toLowerCase() === instanceName.replace(/-/g, '').toLowerCase(),
     );
 
+    console.log('detalhes', detalhe);
     if (!detalhe) {
       return null;
     }

@@ -52,17 +52,8 @@ export class EvolutionApiService {
         throw new InternalServerErrorException('Nao foi possivel consultar a Evolution API.');
       }
 
-      const dados = (await resposta.json()) as {
-        success?: boolean;
-        instances?: EvolutionInstance[];
-      };
-
-      if (!dados.instances || !Array.isArray(dados.instances)) {
-        this.logger.warn('Evolution API retornou formato inesperado.', dados);
-        return [];
-      }
-
-      return dados.instances;
+      const dados = (await resposta.json()).map((item) => item.instance);
+      return dados ? dados : [];
     } catch (error) {
       const err = error as Error;
       this.logger.error('Falha ao comunicar com a Evolution API', err.stack);
