@@ -17,8 +17,10 @@ interface CriarSessaoResponse {
 
 interface GerarQrcodeResponse {
   status?: string;
-  code?: string;
-  base64?: string;
+  qrcode?: {
+    code?: string;
+    base64?: string;
+  };
   message?: string;
 }
 
@@ -28,10 +30,14 @@ export class EvolutionApiService {
   private readonly apiUrl = process.env.EVOLUTION_API_URL ?? 'http://100.80.45.92:2121';
   private readonly apiKey = process.env.EVOLUTION_API_KEY ?? '';
 
-  async buscarInstancias(): Promise<EvolutionInstance[]> {
+  private ensureApiKey() {
     if (!this.apiKey) {
       throw new InternalServerErrorException('Chave da Evolution API nao configurada.');
     }
+  }
+
+  async buscarInstancias(): Promise<EvolutionInstance[]> {
+    this.ensureApiKey();
 
     try {
       const resposta = await fetch(`${this.apiUrl}/instance/fetchInstances`, {
@@ -67,9 +73,7 @@ export class EvolutionApiService {
   }
 
   async criarSessao(instanceName: string) {
-    if (!this.apiKey) {
-      throw new InternalServerErrorException('Chave da Evolution API nao configurada.');
-    }
+    this.ensureApiKey();
 
     try {
       const resposta = await fetch(`${this.apiUrl}/instance/create`, {
@@ -120,20 +124,22 @@ export class EvolutionApiService {
   }
 
   async gerarQrcode(instanceName: string) {
-    if (!this.apiKey) {
-      throw new InternalServerErrorException('Chave da Evolution API nao configurada.');
-    }
+    this.ensureApiKey();
 
     try {
-      const resposta = await fetch(`${this.apiUrl}/instance/connect/${instanceName}`, {
-        method: 'get',
+      const resposta = await fetch(`${this.apiUrl}/v1.8/instance/qrcode`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           apikey: this.apiKey,
-        }
+        },
+        body: JSON.stringify({
+          instanceName,
+          base64: true,
+        }),
       });
 
-      const dados = (await resposta.json()) as GerarQrcodeResponse;
+      const dados = (await resposta.json()) as Record<string, unknown>;
 
       if (!resposta.ok) {
         this.logger.error(
@@ -141,8 +147,24 @@ export class EvolutionApiService {
         );
         throw new InternalServerErrorException('Nao foi possivel gerar o QRCode na Evolution API.');
       }
-      console.log(dados)
-      return dados;
+
+      const qrcodeDados =
+        (dados.qrcode as Record<string, unknown> | undefined) ??
+        ({
+          code: dados.code,
+          base64: dados.base64,
+        } as Record<string, unknown>);
+
+      const respostaNormalizada: GerarQrcodeResponse = {
+        status: (dados.status as string | undefined) ?? undefined,
+        message: (dados.message as string | undefined) ?? undefined,
+        qrcode: {
+          code: (qrcodeDados?.code as string | undefined) ?? undefined,
+          base64: (qrcodeDados?.base64 as string | undefined) ?? undefined,
+        },
+      };
+
+      return respostaNormalizada;
     } catch (error) {
       const err = error as Error;
       this.logger.error('Erro ao gerar QRCode na Evolution API', err.stack);

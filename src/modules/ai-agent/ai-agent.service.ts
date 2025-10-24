@@ -1,4 +1,4 @@
-﻿import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +15,7 @@ import {
   ConfiguracaoAgenteDto,
   SalvarConfiguracaoAgenteDto,
 } from './dto/configuracao-agente.dto';
+import { AtualizarStatusEvolutionDto } from './dto/evolution-status.dto';
 
 import { ChatHistoryEntity } from './entities/chat-history.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
@@ -38,7 +39,7 @@ export class AiAgentService {
     private readonly conexaoRepo: Repository<ConexaoEvolutionEntity>,
     @InjectRepository(ConfiguracaoAgenteEntity)
     private readonly configuracaoRepo: Repository<ConfiguracaoAgenteEntity>,
-  ) { }
+  ) {}
 
   async perguntar(dto: PerguntarDto) {
     const barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
@@ -72,9 +73,9 @@ export class AiAgentService {
       const metadadosComOrigem =
         dto.origem || registro.metadados
           ? {
-            ...(registro.metadados ?? {}),
-            ...(dto.origem ? { origem: dto.origem } : {}),
-          }
+              ...(registro.metadados ?? {}),
+              ...(dto.origem ? { origem: dto.origem } : {}),
+            }
           : undefined;
 
       const conhecimento = await this.baseConhecimento.criar({
@@ -137,6 +138,46 @@ export class AiAgentService {
     return this.mapearConfiguracao(salvo);
   }
 
+  async atualizarStatusEvolutionViaToken(
+    dto: AtualizarStatusEvolutionDto,
+  ): Promise<{ barbeariaId: string }> {
+    if (!dto.token || dto.token !== (process.env.EVOLUTION_API_KEY ?? '')) {
+      throw new BadRequestException('Token invalido.');
+    }
+
+    const instanceNormalizada = dto.instanceName.trim();
+    const conexao = await this.conexaoRepo.findOne({
+      where: { instanceName: instanceNormalizada },
+    });
+
+    if (!conexao) {
+      throw new BadRequestException('Instancia nao encontrada para o status informado.');
+    }
+
+    conexao.status = dto.status;
+    await this.conexaoRepo.save(conexao);
+
+    return { barbeariaId: conexao.barbeariaId };
+  }
+
+  async obterStatusEvolution(barbeariaId: string) {
+    const conexao = await this.conexaoRepo.findOne({
+      where: { barbeariaId },
+    });
+
+    if (!conexao) {
+      return null;
+    }
+
+    return {
+      id: conexao.id,
+      status: conexao.status ?? null,
+      updated_at: conexao.atualizadoEm,
+      idbarbearia: conexao.barbeariaId,
+      instanceName: conexao.instanceName,
+    };
+  }
+
   async criarSessaoEvolution(barbeariaId: string) {
     const instanceName = this.normalizarUsuarioId(barbeariaId);
     const resposta = await this.evolutionApi.criarSessao(instanceName);
@@ -191,8 +232,8 @@ export class AiAgentService {
     if (!estaConectado) {
       const resposta = await this.evolutionApi.gerarQrcode(conexao.instanceName);
       qrcode = {
-        code: resposta.code ?? null,
-        base64: resposta.base64 ?? null,
+        code: resposta.qrcode?.code ?? null,
+        base64: resposta.qrcode?.base64 ?? null,
       };
 
       const statusAlterado = resposta.status !== undefined && resposta.status !== conexao.status;
@@ -200,8 +241,8 @@ export class AiAgentService {
         conexao.status = resposta.status ?? conexao.status;
       }
 
-      const deveRegenerar = Date.now() - ultimaAtualizacao > 30_000;
-      if (deveRegenerar || statusAlterado) {
+      const deveSalvar = Date.now() - ultimaAtualizacao > 30_000 || statusAlterado;
+      if (deveSalvar) {
         await this.conexaoRepo.save(conexao);
       }
     }
@@ -213,6 +254,29 @@ export class AiAgentService {
       status: conexao.status,
       atualizadoEm: conexao.atualizadoEm,
       qrcode,
+    };
+  }
+
+  async obterDetalhesInstancia(barbeariaId: string) {
+    const instanceName = this.normalizarUsuarioId(barbeariaId);
+    const instancias = await this.evolutionApi.buscarInstancias();
+    const detalhe = instancias.find(
+      (item) =>
+        typeof item.instanceName === 'string' &&
+        item.instanceName.toLowerCase() === instanceName.toLowerCase(),
+    );
+
+    if (!detalhe) {
+      return null;
+    }
+
+    const detalheRecord = detalhe as Record<string, unknown>;
+
+    return {
+      instanceName: detalhe.instanceName,
+      numero: detalheRecord.owner ?? null,
+      nome: detalheRecord.profileName ?? null,
+      foto: detalheRecord.profilePictureUrl ?? null,
     };
   }
 

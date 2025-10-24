@@ -137,6 +137,40 @@
       }
     },
     {
+      "name": "Webhook Status Evolution",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/evolution/status", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "status"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{evolutionToken}}\",\n  \"instanceName\": \"{{instanceName}}\",\n  \"status\": \"CONNECTED\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Consultar Status Evolution",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/evolution/status", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "status"] }
+      }
+    },
+    {
+      "name": "Detalhes da Instancia Evolution",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/evolution/instancia", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "instancia"] }
+      }
+    },
+    {
       "name": "Buscar Sessao Evolution",
       "request": {
         "method": "GET",
@@ -150,6 +184,8 @@
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:6363" },
     { "key": "jwtToken", "value": "" },
-    { "key": "conhecimentoId", "value": "" }
+    { "key": "conhecimentoId", "value": "" },
+    { "key": "evolutionToken", "value": "" },
+    { "key": "instanceName", "value": "" }
   ]
 }
