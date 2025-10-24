@@ -17,10 +17,8 @@ interface CriarSessaoResponse {
 
 interface GerarQrcodeResponse {
   status?: string;
-  qrcode?: {
-    code?: string;
-    base64?: string;
-  };
+  code?: string;
+  base64?: string;
   message?: string;
 }
 
@@ -84,7 +82,7 @@ export class EvolutionApiService {
         },
         body: JSON.stringify({
           instanceName,
-          token: 'apgyysmr',
+          token: instanceName,
           integration: 'WHATSAPP-BAILEYS',
           qrcode: true,
           webhook: 'https://n8n.seu.dev.br/webhook/wp-thiago',
@@ -107,7 +105,7 @@ export class EvolutionApiService {
       });
 
       const dados = (await resposta.json()) as CriarSessaoResponse;
-
+      console.log(dados)
       if (!resposta.ok) {
         this.logger.error(
           `Falha ao criar sessao na Evolution API: ${resposta.status} - ${dados?.message}`,
@@ -124,22 +122,20 @@ export class EvolutionApiService {
   }
 
   async gerarQrcode(instanceName: string) {
-    this.ensureApiKey();
+    if (!this.apiKey) {
+      throw new InternalServerErrorException('Chave da Evolution API nao configurada.');
+    }
 
     try {
-      const resposta = await fetch(`${this.apiUrl}/v1.8/instance/qrcode`, {
-        method: 'POST',
+      const resposta = await fetch(`${this.apiUrl}/instance/connect/${instanceName}`, {
+        method: 'get',
         headers: {
           'Content-Type': 'application/json',
           apikey: this.apiKey,
-        },
-        body: JSON.stringify({
-          instanceName,
-          base64: true,
-        }),
+        }
       });
 
-      const dados = (await resposta.json()) as Record<string, unknown>;
+      const dados = (await resposta.json()) as GerarQrcodeResponse;
 
       if (!resposta.ok) {
         this.logger.error(
@@ -147,24 +143,8 @@ export class EvolutionApiService {
         );
         throw new InternalServerErrorException('Nao foi possivel gerar o QRCode na Evolution API.');
       }
-
-      const qrcodeDados =
-        (dados.qrcode as Record<string, unknown> | undefined) ??
-        ({
-          code: dados.code,
-          base64: dados.base64,
-        } as Record<string, unknown>);
-
-      const respostaNormalizada: GerarQrcodeResponse = {
-        status: (dados.status as string | undefined) ?? undefined,
-        message: (dados.message as string | undefined) ?? undefined,
-        qrcode: {
-          code: (qrcodeDados?.code as string | undefined) ?? undefined,
-          base64: (qrcodeDados?.base64 as string | undefined) ?? undefined,
-        },
-      };
-
-      return respostaNormalizada;
+      console.log(dados)
+      return dados;
     } catch (error) {
       const err = error as Error;
       this.logger.error('Erro ao gerar QRCode na Evolution API', err.stack);

@@ -32,7 +32,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
   }),
 )
 export class AiAgentController {
-  constructor(private readonly aiAgentService: AiAgentService) {}
+  constructor(private readonly aiAgentService: AiAgentService) { }
 
   @UseGuards(JwtAuthGuard)
   @Post('perguntar')
@@ -116,7 +116,7 @@ export class AiAgentController {
   @Post('evolution/sessao')
   async criarSessaoEvolution(@Req() req) {
     const barbeariaId = this.barbeariaIdOuErro(req);
-    const sessao = await this.aiAgentService.buscarSessaoEvolution(barbeariaId);
+    const sessao = await this.aiAgentService.buscarSessaoEvolution(barbeariaId).catch(() => undefined);
     if (sessao) {
       return sessao;
     }

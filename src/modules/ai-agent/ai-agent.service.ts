@@ -39,7 +39,7 @@ export class AiAgentService {
     private readonly conexaoRepo: Repository<ConexaoEvolutionEntity>,
     @InjectRepository(ConfiguracaoAgenteEntity)
     private readonly configuracaoRepo: Repository<ConfiguracaoAgenteEntity>,
-  ) {}
+  ) { }
 
   async perguntar(dto: PerguntarDto) {
     const barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
@@ -73,9 +73,9 @@ export class AiAgentService {
       const metadadosComOrigem =
         dto.origem || registro.metadados
           ? {
-              ...(registro.metadados ?? {}),
-              ...(dto.origem ? { origem: dto.origem } : {}),
-            }
+            ...(registro.metadados ?? {}),
+            ...(dto.origem ? { origem: dto.origem } : {}),
+          }
           : undefined;
 
       const conhecimento = await this.baseConhecimento.criar({
@@ -232,8 +232,8 @@ export class AiAgentService {
     if (!estaConectado) {
       const resposta = await this.evolutionApi.gerarQrcode(conexao.instanceName);
       qrcode = {
-        code: resposta.qrcode?.code ?? null,
-        base64: resposta.qrcode?.base64 ?? null,
+        code: resposta.code ?? null,
+        base64: resposta.base64 ?? null,
       };
 
       const statusAlterado = resposta.status !== undefined && resposta.status !== conexao.status;
@@ -253,7 +253,8 @@ export class AiAgentService {
       instanceName: conexao.instanceName,
       status: conexao.status,
       atualizadoEm: conexao.atualizadoEm,
-      qrcode,
+      code: qrcode?.code,
+      base64: qrcode?.base64
     };
   }
 
