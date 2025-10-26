@@ -21,6 +21,7 @@ import { TreinamentoDto } from './dto/treinamento.dto';
 import { AtualizarConhecimentoDto, CriarConhecimentoDto } from './dto/conhecimento.dto';
 import { SalvarConfiguracaoAgenteDto } from './dto/configuracao-agente.dto';
 import { AtualizarStatusEvolutionDto } from './dto/evolution-status.dto';
+import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('ia')
@@ -34,11 +35,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class AiAgentController {
   constructor(private readonly aiAgentService: AiAgentService) { }
 
-  @UseGuards(JwtAuthGuard)
   @Post('perguntar')
-  async perguntar(@Req() req, @Body() dto: PerguntarDto) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    dto.barbeariaId = barbeariaId;
+  async perguntar(@Body() dto: PerguntarDto) {
+    this.validarTokenOuErro(dto.token);
     return this.aiAgentService.perguntar(dto);
   }
 
@@ -149,6 +148,12 @@ export class AiAgentController {
     return this.aiAgentService.removerInstanciaEvolution(barbeariaId);
   }
 
+  @Post('chat-externo')
+  async registrarChatExterno(@Body() dto: RegistrarChatExternoDto) {
+    this.validarTokenOuErro(dto.token);
+    return this.aiAgentService.registrarChatExterno(dto);
+  }
+
   private barbeariaIdOuErro(req: any): string {
     const usuario = req?.user;
     if (!usuario || usuario.scope !== 'barbearia') {
@@ -158,5 +163,12 @@ export class AiAgentController {
       throw new ForbiddenException('Identificador da barbearia nao encontrado no token.');
     }
     return String(usuario.sub);
+  }
+
+  private validarTokenOuErro(token?: string) {
+    const esperado = process.env.CLIENTES_WEBHOOK_TOKEN ?? '';
+    if (!token || !esperado || token !== esperado) {
+      throw new ForbiddenException('Token invalido para acessar o RAG.');
+    }
   }
 }

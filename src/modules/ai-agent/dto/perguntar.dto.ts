@@ -3,6 +3,10 @@ import { IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-valid
 export class PerguntarDto {
   @IsString()
   @IsNotEmpty()
+  token!: string;
+
+  @IsString()
+  @IsNotEmpty()
   @MaxLength(4000)
   pergunta!: string;
 

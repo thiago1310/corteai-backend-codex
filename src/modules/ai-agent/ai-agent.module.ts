@@ -13,6 +13,7 @@ import { N8nChatHistoryEntity } from './entities/n8n-chat-history.entity';
 import { EvolutionApiService } from './services/evolution-api.service';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity'
       N8nChatHistoryEntity,
       ConexaoEvolutionEntity,
       ConfiguracaoAgenteEntity,
+      BarbeariaEntity,
     ]),
   ],
   controllers: [AiAgentController],

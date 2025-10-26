@@ -120,6 +120,8 @@ export class ClientesService {
   async sincronizarComEvolution(dto: SincronizarClienteEvolutionDto) {
     this.validarToken(dto.token);
 
+
+
     const instanceNormalizada = this.normalizarInstance(dto.instanceName);
     const conexao = await this.conexaoPorInstance(instanceNormalizada);
 
@@ -139,7 +141,7 @@ export class ClientesService {
         dataAniversario: dto.dataAniversario ? new Date(dto.dataAniversario) : undefined,
       });
     } else {
-      if (dto.nome !== undefined) {
+      if (cliente.nome == "" && dto.nome !== undefined) {
         cliente.nome = this.sanitizarTexto(dto.nome) ?? cliente.nome ?? null;
       }
 

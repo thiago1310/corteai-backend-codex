@@ -11,13 +11,12 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+          { "key": "Content-Type", "value": "application/json" }
         ],
         "url": { "raw": "{{baseUrl}}/ia/perguntar", "host": ["{{baseUrl}}"], "path": ["ia", "perguntar"] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"pergunta\": \"Quais servicos voces oferecem?\",\n  \"telefoneCliente\": \"+5511999999999\",\n  \"nomeCliente\": \"Maria\",\n  \"telefoneBarbearia\": \"+5511888888888\"\n}"
+          "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"pergunta\": \"Quais servicos voces oferecem?\",\n  \"telefoneCliente\": \"+55 11 99999-9999\",\n  \"nomeCliente\": \"Maria\",\n  \"telefoneBarbearia\": \"+55 11 88888-8888\"\n}"
         }
       }
     },
@@ -270,6 +269,20 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"instanceName\": \"8b19d9d3-71f3-4de5-a9e0-61f57f072c76\",\n  \"telefone\": \"+55 11 96666-1111\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Registrar Chat Externo",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/ia/chat-externo", "host": ["{{baseUrl}}"], "path": ["ia", "chat-externo"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"role\": \"user\",\n  \"content\": \"Cliente: oi, tudo bem?\",\n  \"telefoneBarbearia\": \"+55 11 88888-8888\",\n  \"telefoneCliente\": \"+55 11 99999-9999\"\n}"
         }
       }
     }

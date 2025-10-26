@@ -22,6 +22,8 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 import { DadosClienteEntity } from './entities/dados-cliente.entity';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
+import { BarbeariaEntity } from '../barbearias/barbearias.entity';
+import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 
 @Injectable()
 export class AiAgentService {
@@ -39,9 +41,12 @@ export class AiAgentService {
     private readonly conexaoRepo: Repository<ConexaoEvolutionEntity>,
     @InjectRepository(ConfiguracaoAgenteEntity)
     private readonly configuracaoRepo: Repository<ConfiguracaoAgenteEntity>,
+    @InjectRepository(BarbeariaEntity)
+    private readonly barbeariaRepo: Repository<BarbeariaEntity>,
   ) { }
 
   async perguntar(dto: PerguntarDto) {
+    await this.definirBarbeariaViaTelefone(dto);
     const barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
     dto.barbeariaId = barbeariaId;
 
@@ -402,5 +407,88 @@ export class AiAgentService {
       promptSistema: config.promptSistema,
       atualizadoEm: config.atualizadoEm,
     };
+  }
+
+  private async definirBarbeariaViaTelefone(dto: PerguntarDto) {
+    if (dto.barbeariaId) {
+      return;
+    }
+
+    if (!dto.telefoneBarbearia) {
+      throw new BadRequestException('Telefone da barbearia obrigatorio quando o token e utilizado.');
+    }
+
+    const telefoneNormalizado = this.normalizarTelefone(dto.telefoneBarbearia);
+    const barbearia = await this.barbeariaRepo
+      .createQueryBuilder('barbearia')
+      .where("regexp_replace(barbearia.telefone, '\\D', '', 'g') = :telefone", {
+        telefone: telefoneNormalizado,
+      })
+      .getOne();
+
+    if (!barbearia) {
+      throw new BadRequestException('Barbearia nao encontrada para o telefone informado.');
+    }
+
+    dto.barbeariaId = barbearia.id;
+  }
+
+  private normalizarTelefone(valor: string) {
+    const somenteDigitos = valor.replace(/\D/g, '');
+    if (!somenteDigitos) {
+      throw new BadRequestException('Telefone informado e invalido.');
+    }
+    return somenteDigitos;
+  }
+
+  async registrarChatExterno(dto: RegistrarChatExternoDto) {
+    const barbeariaId = await this.resolverBarbeariaId(dto.barbeariaId, dto.telefoneBarbearia);
+    await this.historicoRepo.save(
+      this.historicoRepo.create({
+        barbeariaId,
+        telefoneBarbearia: dto.telefoneBarbearia ?? null,
+        telefoneCliente: dto.telefoneCliente ?? null,
+        role: dto.role,
+        content: dto.content,
+      }),
+    );
+
+    if (dto.role === 'assistant') {
+      const payload: PerguntarDto = {
+        token: dto.token,
+        pergunta: dto.content,
+        barbeariaId,
+      };
+      if (dto.telefoneCliente) {
+        payload.telefoneCliente = dto.telefoneCliente;
+      }
+      if (dto.telefoneBarbearia) {
+        payload.telefoneBarbearia = dto.telefoneBarbearia;
+      }
+
+      await this.registrarMensagem(payload, barbeariaId, dto.content);
+    }
+
+    return { registrado: true };
+  }
+
+  private async resolverBarbeariaId(id?: string, telefone?: string) {
+    if (id) {
+      return id;
+    }
+    if (!telefone) {
+      throw new BadRequestException('Informe o telefone da barbearia ou o barbeariaId.');
+    }
+    const telefoneNormalizado = this.normalizarTelefone(telefone);
+    const barbearia = await this.barbeariaRepo
+      .createQueryBuilder('barbearia')
+      .where("regexp_replace(barbearia.telefone, '\\D', '', 'g') = :telefone", {
+        telefone: telefoneNormalizado,
+      })
+      .getOne();
+    if (!barbearia) {
+      throw new BadRequestException('Barbearia nao encontrada para o telefone informado.');
+    }
+    return barbearia.id;
   }
 }
