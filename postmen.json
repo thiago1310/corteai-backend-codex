@@ -189,6 +189,89 @@
         ],
         "url": { "raw": "{{baseUrl}}/ia/evolution/sessao", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "sessao"] }
       }
+    },
+    {
+      "name": "Listar Clientes",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/clientes?nome=joao&telefone=1199&numeroRegistro=ABC123",
+          "host": ["{{baseUrl}}"],
+          "path": ["clientes"],
+          "query": [
+            { "key": "nome", "value": "joao" },
+            { "key": "telefone", "value": "1199" },
+            { "key": "numeroRegistro", "value": "ABC123" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Criar Cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/clientes", "host": ["{{baseUrl}}"], "path": ["clientes"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Joao\",\n  \"telefone\": \"+55 11 98888-0000\",\n  \"email\": \"joao@corteai.com\",\n  \"cpf\": \"12345678901\",\n  \"numeroRegistro\": \"ABC123\",\n  \"dataAniversario\": \"1994-02-20\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Obter Cliente por ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] }
+      }
+    },
+    {
+      "name": "Atualizar Cliente",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Joao Silva\",\n  \"telefone\": \"+55 11 97777-2222\",\n  \"numeroRegistro\": \"ABC124\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Excluir Cliente",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] }
+      }
+    },
+    {
+      "name": "Sincronizar Cliente Evolution",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/clientes/evolution/sincronizar", "host": ["{{baseUrl}}"], "path": ["clientes", "evolution", "sincronizar"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"instanceName\": \"8b19d9d3-71f3-4de5-a9e0-61f57f072c76\",\n  \"telefone\": \"+55 11 96666-1111\"\n}"
+        }
+      }
     }
   ],
   "variable": [
@@ -196,6 +279,8 @@
     { "key": "jwtToken", "value": "" },
     { "key": "conhecimentoId", "value": "" },
     { "key": "evolutionToken", "value": "" },
-    { "key": "instanceName", "value": "" }
+    { "key": "instanceName", "value": "" },
+    { "key": "clienteId", "value": "" },
+    { "key": "clientesWebhookToken", "value": "" }
   ]
 }

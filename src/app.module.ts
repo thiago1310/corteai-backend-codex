@@ -13,6 +13,7 @@ import { FaqModule } from './modules/faq/faq.module';
 import { LancamentosModule } from './modules/lancamentos/lancamentos.module';
 import databaseConfig from './modules/config/database.config';
 import { AiAgentModule } from './modules/ai-agent/ai-agent.module';
+import { ClientesModule } from './modules/clientes/clientes.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AiAgentModule } from './modules/ai-agent/ai-agent.module';
     FaqModule,
     LancamentosModule,
     AiAgentModule,
+    ClientesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
