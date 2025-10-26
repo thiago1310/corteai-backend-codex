@@ -45,11 +45,10 @@ export class AiAgentService {
     const barbeariaId = this.exigirBarbeariaId(dto.barbeariaId);
     dto.barbeariaId = barbeariaId;
 
-    await this.registrarHistorico('user', dto, barbeariaId);
+    // Historico nao e mais persistido aqui; processo externo (n8n) cuidara disso.
 
     const respostaRag = await this.ragService.perguntar(dto.pergunta, barbeariaId);
 
-    await this.registrarHistorico('assistant', dto, barbeariaId, respostaRag.resposta);
     await this.registrarMensagem(dto, barbeariaId, respostaRag.resposta);
     await this.atualizarCliente(dto, barbeariaId);
 
