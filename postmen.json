@@ -1,299 +1,1042 @@
-﻿{
-  "info": {
-    "_postman_id": "8a706388-0e9a-4c40-9b9f-5c6c1f6335d1",
-    "name": "CorteAI - Modulo IA",
-    "description": "Colecao de rotas protegidas do modulo de IA (barbearia).",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Perguntar (RAG)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/perguntar", "host": ["{{baseUrl}}"], "path": ["ia", "perguntar"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"pergunta\": \"Quais servicos voces oferecem?\",\n  \"telefoneCliente\": \"+55 11 99999-9999\",\n  \"nomeCliente\": \"Maria\",\n  \"telefoneBarbearia\": \"+55 11 88888-8888\"\n}"
-        }
-      }
-    },
-    {
-      "name": "Treinar Base",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/treinar", "host": ["{{baseUrl}}"], "path": ["ia", "treinar"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"origem\": \"Painel\",\n  \"registros\": [\n    {\n      \"pergunta\": \"Qual o horario de funcionamento?\",\n      \"resposta\": \"Funcionamos de segunda a sabado das 9h as 19h.\",\n      \"ativo\": true\n    },\n    {\n      \"pergunta\": \"Aceitam cartao?\",\n      \"resposta\": \"Sim, debito, credito e PIX.\",\n      \"ativo\": true\n    }\n  ]\n}"
-        }
-      }
-    },
-    {
-      "name": "Obter Configuracao do Agente",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/configuracao", "host": ["{{baseUrl}}"], "path": ["ia", "configuracao"] }
-      }
-    },
-    {
-      "name": "Salvar Configuracao do Agente",
-      "request": {
-        "method": "PUT",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/configuracao", "host": ["{{baseUrl}}"], "path": ["ia", "configuracao"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"nomeAgente\": \"Assistente CorteAI\",\n  \"promptSistema\": \"Voce e um recepcionista virtual especializado em barbeiros.\"\n}"
-        }
-      }
-    },
-    {
-      "name": "Listar Base de Conhecimento",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/base-conhecimento", "host": ["{{baseUrl}}"], "path": ["ia", "base-conhecimento"] }
-      }
-    },
-    {
-      "name": "Criar Conhecimento",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/base-conhecimento", "host": ["{{baseUrl}}"], "path": ["ia", "base-conhecimento"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"pergunta\": \"Voces fazem barba?\",\n  \"resposta\": \"Sim, fazemos barba com duracao media de 20 minutos.\",\n  \"ativo\": true,\n  \"metadados\": { \"categoria\": \"servicos\" }\n}"
-        }
-      }
-    },
-    {
-      "name": "Atualizar Conhecimento",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/base-conhecimento/{{conhecimentoId}}", "host": ["{{baseUrl}}"], "path": ["ia", "base-conhecimento", "{{conhecimentoId}}"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"resposta\": \"Sim, fazemos barba a partir de R$ 35,00 com duracao de 20 minutos.\",\n  \"ativo\": true\n}"
-        }
-      }
-    },
-    {
-      "name": "Remover Conhecimento",
-      "request": {
-        "method": "DELETE",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/base-conhecimento/{{conhecimentoId}}", "host": ["{{baseUrl}}"], "path": ["ia", "base-conhecimento", "{{conhecimentoId}}"] }
-      }
-    },
-    {
-      "name": "Historico de Mensagens",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/ia/historico?limite=20",
-          "host": ["{{baseUrl}}"],
-          "path": ["ia", "historico"],
-          "query": [{ "key": "limite", "value": "20" }]
-        }
-      }
-    },
-    {
-      "name": "Criar Sessao Evolution",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/evolution/sessao", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "sessao"] }
-      }
-    },
-    {
-      "name": "Webhook Status Evolution",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/evolution/status", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "status"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"token\": \"{{evolutionToken}}\",\n  \"instanceName\": \"{{instanceName}}\",\n  \"status\": \"CONNECTED\"\n}"
-        }
-      }
-    },
-    {
-      "name": "Consultar Status Evolution",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/evolution/status", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "status"] }
-      }
-    },
-    {
-      "name": "Detalhes da Instancia Evolution",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/evolution/instancia", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "instancia"] }
-      }
-    },
-    {
-      "name": "Remover Instancia Evolution",
-      "request": {
-        "method": "DELETE",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/evolution/instancia", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "instancia"] }
-      }
-    },
-    {
-      "name": "Buscar Sessao Evolution",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/evolution/sessao", "host": ["{{baseUrl}}"], "path": ["ia", "evolution", "sessao"] }
-      }
-    },
-    {
-      "name": "Listar Clientes",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/clientes?nome=joao&telefone=1199&numeroRegistro=ABC123",
-          "host": ["{{baseUrl}}"],
-          "path": ["clientes"],
-          "query": [
-            { "key": "nome", "value": "joao" },
-            { "key": "telefone", "value": "1199" },
-            { "key": "numeroRegistro", "value": "ABC123" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Criar Cliente",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/clientes", "host": ["{{baseUrl}}"], "path": ["clientes"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"nome\": \"Joao\",\n  \"telefone\": \"+55 11 98888-0000\",\n  \"email\": \"joao@corteai.com\",\n  \"cpf\": \"12345678901\",\n  \"numeroRegistro\": \"ABC123\",\n  \"dataAniversario\": \"1994-02-20\"\n}"
-        }
-      }
-    },
-    {
-      "name": "Obter Cliente por ID",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] }
-      }
-    },
-    {
-      "name": "Atualizar Cliente",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"nome\": \"Joao Silva\",\n  \"telefone\": \"+55 11 97777-2222\",\n  \"numeroRegistro\": \"ABC124\"\n}"
-        }
-      }
-    },
-    {
-      "name": "Excluir Cliente",
-      "request": {
-        "method": "DELETE",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}", "type": "text" }
-        ],
-        "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] }
-      }
-    },
-    {
-      "name": "Sincronizar Cliente Evolution",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": { "raw": "{{baseUrl}}/clientes/evolution/sincronizar", "host": ["{{baseUrl}}"], "path": ["clientes", "evolution", "sincronizar"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"instanceName\": \"8b19d9d3-71f3-4de5-a9e0-61f57f072c76\",\n  \"telefone\": \"+55 11 96666-1111\"\n}"
-        }
-      }
-    },
-    {
-      "name": "Registrar Chat Externo",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": { "raw": "{{baseUrl}}/ia/chat-externo", "host": ["{{baseUrl}}"], "path": ["ia", "chat-externo"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"role\": \"user\",\n  \"content\": \"Cliente: oi, tudo bem?\",\n  \"telefoneBarbearia\": \"+55 11 88888-8888\",\n  \"telefoneCliente\": \"+55 11 99999-9999\"\n}"
-        }
-      }
-    }
-  ],
-  "variable": [
-    { "key": "baseUrl", "value": "http://localhost:6363" },
-    { "key": "jwtToken", "value": "" },
-    { "key": "conhecimentoId", "value": "" },
-    { "key": "evolutionToken", "value": "" },
-    { "key": "instanceName", "value": "" },
-    { "key": "clienteId", "value": "" },
-    { "key": "clientesWebhookToken", "value": "" }
-  ]
+{
+	"info": {
+		"_postman_id": "4bd0f840-1573-4af3-ad58-ff163d300dca",
+		"name": "Corteai-codex",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17287291"
+	},
+	"item": [
+		{
+			"name": "barbearia",
+			"item": [
+				{
+					"name": "horarios",
+					"item": [
+						{
+							"name": "Listar horários",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/barbearias/{{barbeariaId}}/horarios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"barbearias",
+										"{{barbeariaId}}",
+										"horarios"
+									]
+								},
+								"description": "Retorna todos os horários cadastrados para a barbearia."
+							},
+							"response": []
+						},
+						{
+							"name": "Atualizar horários",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"horarios\": [\n    { \"diaSemana\": \"segunda\", \"ativo\": false },\n    { \"diaSemana\": \"terca\", \"ativo\": true, \"abre\": \"08:00\", \"fecha\": \"12:00\" },\n    { \"diaSemana\": \"terca\", \"ativo\": true, \"abre\": \"13:30\", \"fecha\": \"18:00\" },\n    { \"diaSemana\": \"terca\", \"ativo\": true, \"abre\": \"17:30\", \"fecha\": \"19:00\" },\n    { \"diaSemana\": \"quarta\", \"ativo\": true, \"abre\": \"09:00\", \"fecha\": \"17:00\" },\n    { \"diaSemana\": \"quinta\", \"ativo\": false },\n    { \"diaSemana\": \"sexta\", \"ativo\": true, \"abre\": \"10:00\", \"fecha\": \"19:00\" },\n    { \"diaSemana\": \"sabado\", \"ativo\": true, \"abre\": \"09:00\", \"fecha\": \"14:00\" },\n    { \"diaSemana\": \"domingo\", \"ativo\": false }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/barbearias/{{barbeariaId}}/horarios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"barbearias",
+										"{{barbeariaId}}",
+										"horarios"
+									]
+								},
+								"description": "Substitui todos os intervalos de funcionamento da barbearia."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Listar Barbearias",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/barbearias",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"barbearias"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/barbearias/{{barbeariaId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"barbearias",
+								"{{barbeariaId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar por Link",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/barbearias/link/{{barbeariaLink}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"barbearias",
+								"link",
+								"{{barbeariaLink}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Barbearia",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Barbearia Central Atualizada\",\n  \"telefone\": \"11977776666\",\n  \"statusAberto\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/barbearias/{{barbeariaId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"barbearias",
+								"{{barbeariaId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ai-agent",
+			"item": [
+				{
+					"name": "base-conhecimento",
+					"item": [
+						{
+							"name": "Listar Base de Conhecimento",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/base-conhecimento",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"base-conhecimento"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Criar Conhecimento",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pergunta\": \"Voces fazem barba?\",\n  \"resposta\": \"Sim, fazemos barba com duracao media de 20 minutos.\",\n  \"ativo\": true,\n  \"metadados\": { \"categoria\": \"servicos\" }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/ia/base-conhecimento",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"base-conhecimento"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Atualizar Conhecimento",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"resposta\": \"Sim, fazemos barba a partir de R$ 35,00 com duracao de 20 minutos.\",\n  \"ativo\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/ia/base-conhecimento/{{conhecimentoId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"base-conhecimento",
+										"{{conhecimentoId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Remover Conhecimento",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/base-conhecimento/{{conhecimentoId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"base-conhecimento",
+										"{{conhecimentoId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "configuracao",
+					"item": [
+						{
+							"name": "Obter Configuracao do Agente",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/configuracao",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"configuracao"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Salvar Configuracao do Agente",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nomeAgente\": \"Assistente CorteAI\",\n  \"promptSistema\": \"Voce e um recepcionista virtual especializado em barbeiros.\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/ia/configuracao",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"configuracao"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "evolution",
+					"item": [
+						{
+							"name": "Criar Sessao Evolution",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/evolution/sessao",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"evolution",
+										"sessao"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Webhook Status Evolution",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"WLkjflksdfjkljfi324rj34okfj3lkjf\",\n  \"instanceName\": \"{{instanceName}}\",\n  \"status\": \"CONNECTED\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/ia/evolution/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"evolution",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Consultar Status Evolution",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/evolution/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"evolution",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Detalhes da Instancia Evolution***",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/evolution/instancia",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"evolution",
+										"instancia"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Buscar Sessao Evolution",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/evolution/sessao",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"evolution",
+										"sessao"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Remover Instancia Evolution",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ia/evolution/instancia",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ia",
+										"evolution",
+										"instancia"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Perguntar (RAG)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pergunta\": \"Ai, vocês aceitão pix?\",\n  \"telefoneCliente\": \"+5548999352716\",\n  \"nomeCliente\": \"Jéssica Wilvert\",\n  \"telefoneBarbearia\": \"+5548996591495\",\n  \"token\":\"lakddfjjj4jjtj54i95i595955t54g4g47g4hs5df4g4sfdgSDFGgf5gXFBNASEWWERVGGH\",\n  \"barbeariaId\":\"54e9fdd2-b9d6-4563-b41a-2cd640bc401c\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ia/perguntar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ia",
+								"perguntar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Treinar Base",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"origem\": \"Painel\",\n  \"registros\": [\n    {\n      \"pergunta\": \"Qual o horario de funcionamento?\",\n      \"resposta\": \"Funcionamos de segunda a sabado das 9h as 19h.\",\n      \"ativo\": true\n    },\n    {\n      \"pergunta\": \"Aceitam cartao?\",\n      \"resposta\": \"Sim, debito, credito e PIX.\",\n      \"ativo\": true\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ia/treinar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ia",
+								"treinar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Historico de Mensagens",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/ia/historico?limite=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ia",
+								"historico"
+							],
+							"query": [
+								{
+									"key": "limite",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Chat Externo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"lakddfjjj4jjtj54i95i595955t54g4g47g4hs5df4g4sfdgSDFGgf5gXFBNASEWWERVGGH\",\n    \"role\": \"user\",\n    \"content\": \"Ai, vocês aceitão pix?\",\n    \"barbeariaId\": \"54e9fdd2-b9d6-4563-b41a-2cd640bc401c\",\n    \"telefoneBarbearia\": \"+5548996591495\",\n    \"telefoneCliente\": \"+5548999352716\"    \n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ia/chat-externo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ia",
+								"chat-externo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upsert Chat Status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"clienteId\": \"123\",\n  \"status\": 1,\n  \"metadados\": {\n    \"origem\": \"n8n\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ia/chat-status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ia",
+								"chat-status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Chat Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ia/chat-status?token={{clientesWebhookToken}}&clienteId=123",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ia",
+								"chat-status"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "{{clientesWebhookToken}}"
+								},
+								{
+									"key": "clienteId",
+									"value": "123"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  const data = pm.response.json();",
+									"  if (data.access_token) {",
+									"    pm.environment.set('jwtToken', data.access_token);",
+									"  }",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{barbeariaEmail}}\",\n  \"senha\": \"{{barbeariaSenha}}\",\n  \"scope\": \"barbearia\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Cliente Teste\",\n  \"email\": \"cliente+teste@example.com\",\n  \"senha\": \"123456\",\n  \"cpf\": \"12345678901\",\n  \"telefone\": \"11999999999\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register/usuario",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								"usuario"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Barbearia",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Thiago Barber\",\n  \"cpfCnpj\": \"06944858967\",\n  \"email\": \"thiago.1310@live.com\",\n  \"senha\": \"Wq3h4hdcxh@\",\n  \"telefone\": \"48996591495\",\n  \"cep\": \"88160150\",\n  \"uf\": \"SC\",\n  \"cidade\": \"Biguaçu\",\n  \"bairro\": \"Centro\",\n  \"rua\": \"Justino Adalberto Leal\",\n  \"numero\": \"401\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register/barbearia",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								"barbearia"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Alterar Senha",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"{{alvoId}}\",\n  \"senhaAtual\": \"{{novaSenha}}\",\n  \"novaSenha\": \"{{novaSenha}}\",\n  \"scope\": \"barbearia\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"password"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "clientes",
+			"item": [
+				{
+					"name": "Listar Clientes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/clientes?nome=joao&telefone=1199&numeroRegistro=ABC123",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes"
+							],
+							"query": [
+								{
+									"key": "nome",
+									"value": "joao"
+								},
+								{
+									"key": "telefone",
+									"value": "1199"
+								},
+								{
+									"key": "numeroRegistro",
+									"value": "ABC123"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Cliente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Joao\",\n  \"telefone\": \"+55 11 98888-0000\",\n  \"email\": \"joao@corteai.com\",\n  \"cpf\": \"12345678901\",\n  \"numeroRegistro\": \"ABC123\",\n  \"dataAniversario\": \"1994-02-20\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clientes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Cliente por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/{{clienteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"{{clienteId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Cliente",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Joao Silva\",\n  \"telefone\": \"+55 11 97777-2222\",\n  \"numeroRegistro\": \"ABC124\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clientes/{{clienteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"{{clienteId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Cliente",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/{{clienteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"{{clienteId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sincronizar Cliente Evolution",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"instanceName\": \"54e9fdd2b9d64563b41a2cd640bc401c\",\n  \"telefone\": \"+5548999352716\",\n  \"nome\":\"Jéssica Wilvert\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clientes/evolution/sincronizar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"evolution",
+								"sincronizar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "barbeariaId",
+			"value": ""
+		},
+		{
+			"key": "token_user",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "jwtToken",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "barbeariaLink",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "clientesWebhookToken",
+			"value": "",
+			"type": "default"
+		}
+	]
 }

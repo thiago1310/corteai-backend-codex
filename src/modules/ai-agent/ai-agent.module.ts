@@ -14,6 +14,7 @@ import { EvolutionApiService } from './services/evolution-api.service';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
+import { ChatStatusEntity } from './entities/chat-status.entity';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { BarbeariaEntity } from '../barbearias/barbearias.entity';
       ConexaoEvolutionEntity,
       ConfiguracaoAgenteEntity,
       BarbeariaEntity,
+      ChatStatusEntity,
     ]),
   ],
   controllers: [AiAgentController],

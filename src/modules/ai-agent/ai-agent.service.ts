@@ -24,6 +24,8 @@ import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
+import { ChatStatusEntity } from './entities/chat-status.entity';
+import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
 
 @Injectable()
 export class AiAgentService {
@@ -43,6 +45,8 @@ export class AiAgentService {
     private readonly configuracaoRepo: Repository<ConfiguracaoAgenteEntity>,
     @InjectRepository(BarbeariaEntity)
     private readonly barbeariaRepo: Repository<BarbeariaEntity>,
+    @InjectRepository(ChatStatusEntity)
+    private readonly chatStatusRepo: Repository<ChatStatusEntity>,
   ) { }
 
   async perguntar(dto: PerguntarDto) {
@@ -490,5 +494,53 @@ export class AiAgentService {
       throw new BadRequestException('Barbearia nao encontrada para o telefone informado.');
     }
     return barbearia.id;
+  }
+
+  async upsertChatStatus(dto: UpsertChatStatusDto) {
+    this.validarToken(dto.token);
+
+    let status = await this.chatStatusRepo.findOne({
+      where: { clienteId: dto.clienteId },
+    });
+
+    if (!status) {
+      status = this.chatStatusRepo.create({
+        clienteId: dto.clienteId,
+        status: dto.status,
+        metadados: dto.metadados ?? null,
+      });
+    } else {
+      status.status = dto.status;
+      status.metadados = dto.metadados ?? null;
+    }
+
+    const salvo = await this.chatStatusRepo.save(status);
+    return salvo;
+  }
+
+  async obterChatStatus(dto: GetChatStatusDto) {
+    this.validarToken(dto.token);
+
+    let status = await this.chatStatusRepo.findOne({
+      where: { clienteId: dto.clienteId },
+    });
+
+    if (!status) {
+      status = this.chatStatusRepo.create({
+        clienteId: dto.clienteId,
+        status: 1,
+        metadados: null,
+      });
+      status = await this.chatStatusRepo.save(status);
+    }
+
+    return status;
+  }
+
+  private validarToken(token?: string) {
+    const esperado = process.env.CLIENTES_WEBHOOK_TOKEN ?? '';
+    if (!token || !esperado || token !== esperado) {
+      throw new BadRequestException('Token invalido.');
+    }
   }
 }

@@ -22,6 +22,7 @@ import { AtualizarConhecimentoDto, CriarConhecimentoDto } from './dto/conhecimen
 import { SalvarConfiguracaoAgenteDto } from './dto/configuracao-agente.dto';
 import { AtualizarStatusEvolutionDto } from './dto/evolution-status.dto';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
+import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('ia')
@@ -152,6 +153,18 @@ export class AiAgentController {
   async registrarChatExterno(@Body() dto: RegistrarChatExternoDto) {
     this.validarTokenOuErro(dto.token);
     return this.aiAgentService.registrarChatExterno(dto);
+  }
+
+  @Post('chat-status')
+  async upsertChatStatus(@Body() dto: UpsertChatStatusDto) {
+    this.validarTokenOuErro(dto.token);
+    return this.aiAgentService.upsertChatStatus(dto);
+  }
+
+  @Get('chat-status')
+  async obterChatStatus(@Query() dto: GetChatStatusDto) {
+    this.validarTokenOuErro(dto.token);
+    return this.aiAgentService.obterChatStatus(dto);
   }
 
   private barbeariaIdOuErro(req: any): string {
