@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,6 +26,7 @@ import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 import { ChatStatusEntity } from './entities/chat-status.entity';
 import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
+import { ClienteEntity } from '../clientes/clientes.entity';
 
 @Injectable()
 export class AiAgentService {
@@ -35,6 +36,8 @@ export class AiAgentService {
     private readonly evolutionApi: EvolutionApiService,
     @InjectRepository(ChatHistoryEntity)
     private readonly historicoRepo: Repository<ChatHistoryEntity>,
+    @InjectRepository(ClienteEntity)
+    private readonly clienteRepo: Repository<ClienteEntity>,
     @InjectRepository(ChatMessageEntity)
     private readonly mensagensRepo: Repository<ChatMessageEntity>,
     @InjectRepository(DadosClienteEntity)
@@ -499,6 +502,9 @@ export class AiAgentService {
   async upsertChatStatus(dto: UpsertChatStatusDto) {
     this.validarToken(dto.token);
 
+    let clientExist = await this.clienteRepo.findOne({ where: { id: dto.clienteId } });
+    if (!clientExist) throw new NotFoundException('Cliente não encontrado.')
+
     let status = await this.chatStatusRepo.findOne({
       where: { clienteId: dto.clienteId },
     });
@@ -520,6 +526,9 @@ export class AiAgentService {
 
   async obterChatStatus(dto: GetChatStatusDto) {
     this.validarToken(dto.token);
+
+    let clientExist = await this.clienteRepo.findOne({ where: { id: dto.clienteId } });
+    if (!clientExist) throw new NotFoundException('Cliente não encontrado.')
 
     let status = await this.chatStatusRepo.findOne({
       where: { clienteId: dto.clienteId },

@@ -15,6 +15,7 @@ import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { ChatStatusEntity } from './entities/chat-status.entity';
+import { ClienteEntity } from '../clientes/clientes.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ChatStatusEntity } from './entities/chat-status.entity';
       ChatHistoryEntity,
       ChatMessageEntity,
       DadosClienteEntity,
+      ClienteEntity,
       N8nChatHistoryEntity,
       ConexaoEvolutionEntity,
       ConfiguracaoAgenteEntity,
@@ -40,4 +42,4 @@ import { ChatStatusEntity } from './entities/chat-status.entity';
   ],
   exports: [AiAgentService],
 })
-export class AiAgentModule {}
+export class AiAgentModule { }
