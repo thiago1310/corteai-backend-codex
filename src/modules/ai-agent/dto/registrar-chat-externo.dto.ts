@@ -18,6 +18,11 @@ export class RegistrarChatExternoDto {
   @IsUUID()
   barbeariaId?: string;
 
+
+  @IsOptional()
+  @IsString()
+  messageId?: string;
+
   @IsOptional()
   @IsString()
   telefoneBarbearia?: string;

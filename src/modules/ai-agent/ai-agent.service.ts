@@ -23,10 +23,12 @@ import { DadosClienteEntity } from './entities/dados-cliente.entity';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
 import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
-import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
+
 import { ChatStatusEntity } from './entities/chat-status.entity';
 import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
 import { ClienteEntity } from '../clientes/clientes.entity';
+import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
+import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 
 @Injectable()
 export class AiAgentService {
@@ -448,6 +450,14 @@ export class AiAgentService {
     return somenteDigitos;
   }
 
+
+  async BuscarChatExterno(dto: BuscarChatExternoDto) {
+    const chat = await this.historicoRepo.findOne({ where: { messageId: dto.messageId } });
+    if (!chat) throw new NotFoundException('MessageId não encontrado.');
+    return chat;
+  }
+
+
   async registrarChatExterno(dto: RegistrarChatExternoDto) {
     const barbeariaId = await this.resolverBarbeariaId(dto.barbeariaId, dto.telefoneBarbearia);
     await this.historicoRepo.save(
@@ -455,6 +465,7 @@ export class AiAgentService {
         barbeariaId,
         telefoneBarbearia: dto.telefoneBarbearia ?? null,
         telefoneCliente: dto.telefoneCliente ?? null,
+        messageId: dto.messageId,
         role: dto.role,
         content: dto.content,
       }),

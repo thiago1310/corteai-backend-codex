@@ -21,9 +21,11 @@ import { TreinamentoDto } from './dto/treinamento.dto';
 import { AtualizarConhecimentoDto, CriarConhecimentoDto } from './dto/conhecimento.dto';
 import { SalvarConfiguracaoAgenteDto } from './dto/configuracao-agente.dto';
 import { AtualizarStatusEvolutionDto } from './dto/evolution-status.dto';
-import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
+
 import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
+import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 
 @Controller('ia')
 @UsePipes(
@@ -153,6 +155,12 @@ export class AiAgentController {
   async registrarChatExterno(@Body() dto: RegistrarChatExternoDto) {
     this.validarTokenOuErro(dto.token);
     return this.aiAgentService.registrarChatExterno(dto);
+  }
+
+  @Post('chat-externo-buscar')
+  async registrarChatExternoBuscarPorId(@Body() dto: BuscarChatExternoDto) {
+    this.validarTokenOuErro(dto.token);
+    return this.aiAgentService.BuscarChatExterno(dto);
   }
 
   @Post('chat-status')

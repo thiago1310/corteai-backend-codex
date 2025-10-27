@@ -13,6 +13,9 @@ export class ChatHistoryEntity {
   @Column({ name: 'barbearia_id', type: 'uuid' })
   barbeariaId!: string;
 
+  @Column({ name: 'message_id', type: 'text', nullable: true })
+  messageId!: string;
+
   @Column({ name: 'barbearia_phone', type: 'text', nullable: true })
   telefoneBarbearia?: string | null;
 
@@ -21,6 +24,8 @@ export class ChatHistoryEntity {
 
   @Column({ type: 'varchar', length: 20 })
   role!: ChatRole;
+
+
 
   @Column({ type: 'text' })
   content!: string;
