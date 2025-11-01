@@ -602,10 +602,17 @@ export class AiAgentService {
       (data as Record<string, unknown>)?.Telefone,
     ];
 
-    for (const candidato of candidatos) {
-      const telefone = this.extrairTelefoneDeValor(candidato);
-      if (telefone && !this.ehTelefonePlaceholder(telefone)) {
-        return this.normalizarTelefoneCliente(telefone);
+    if (key?.remoteJid) {
+      const telefonePrimario = this.extrairTelefoneDeValor(key.remoteJid);
+      if (telefonePrimario && !this.ehTelefonePlaceholder(telefonePrimario)) {
+        return this.normalizarTelefoneCliente(telefonePrimario);
+      }
+    }
+
+    if (key?.participant) {
+      const telefoneParticipant = this.extrairTelefoneDeValor(key.participant);
+      if (telefoneParticipant && !this.ehTelefonePlaceholder(telefoneParticipant)) {
+        return this.normalizarTelefoneCliente(telefoneParticipant);
       }
     }
 
