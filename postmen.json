@@ -403,10 +403,39 @@
           },
           "response": []
         },
-				{
-					"name": "evolution",
-					"item": [
-						{
+        {
+          "name": "Evolution Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"message\": {\n    \"chat_id\": \"5511999999999\",\n    \"content_type\": \"text\",\n    \"content\": \"Funciona?\",\n    \"timestamp\": \"2024-05-05T10:00:00Z\",\n    \"event\": \"incoming\"\n  },\n  \"body\": {\n    \"event\": \"messages.upsert\",\n    \"Telefone\": \"+55 11 99999-9999\",\n    \"NomeWhatsapp\": \"Cliente Teste\",\n    \"Instance\": \"54e9fdd2b9d64563b41a2cd640bc401c\",\n    \"messageId\": \"whatsapp-msg-123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ia/evolution/webhook",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "evolution",
+                "webhook"
+              ]
+            },
+            "description": "Recebe o webhook bruto do Evolution, sincroniza cliente, atualiza status e histórico em uma única chamada."
+          },
+          "response": []
+        },
+        {
+          "name": "evolution",
+          "item": [
+            {
 							"name": "Criar Sessao Evolution",
 							"request": {
 								"method": "POST",

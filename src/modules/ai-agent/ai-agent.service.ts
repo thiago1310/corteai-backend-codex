@@ -31,6 +31,7 @@ import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 import { DEFAULT_AGENT_NAME, DEFAULT_AGENT_PROMPT } from './ai-agent.constants';
 import { ConsultarBarbeariaWebhookDto } from './dto/consultar-barbearia-webhook.dto';
+import { EvolutionWebhookDto } from './dto/evolution-webhook.dto';
 
 @Injectable()
 export class AiAgentService {
@@ -171,6 +172,84 @@ export class AiAgentService {
     return {
       barbearia: this.mapearBarbeariaParaWebhook(barbearia),
       configuracaoAgente: configuracao,
+    };
+  }
+
+  async processarEvolutionWebhook(dto) {
+    this.validarToken(dto.token);
+
+    const instanceExtraida = this.extrairInstance(dto);
+    if (!instanceExtraida) {
+      throw new BadRequestException('Instance nao informada no webhook.');
+    }
+
+    const instanceNormalizada = this.normalizarInstance(instanceExtraida);
+    const conexao = await this.resolverConexaoPorInstance(instanceNormalizada, instanceExtraida);
+    if (!conexao) {
+      throw new BadRequestException('Instancia Evolution nao encontrada.');
+    }
+
+    const barbeariaId = conexao.barbeariaId;
+
+    const telefone = await this.resolverTelefoneCliente(barbeariaId, dto);
+    if (!telefone) {
+      throw new BadRequestException('Nao foi possivel determinar o telefone do cliente.');
+    }
+
+    const cliente = await this.sincronizarClienteEvolution(barbeariaId, telefone, dto);
+
+    const evento = dto.body?.event ?? null;
+    let statusConexao = conexao.status ?? null;
+
+    if (evento && evento.toLowerCase() === 'connection.update') {
+      const novoStatus = this.extrairStatusDaConexao(dto);
+      if (novoStatus && novoStatus !== conexao.status) {
+        conexao.status = novoStatus;
+        await this.conexaoRepo.save(conexao);
+        statusConexao = novoStatus;
+      }
+      return;
+    }
+
+    const mensagemProcessada = await this.processarMensagemEvolution(
+      barbeariaId,
+      cliente,
+      telefone,
+      dto,
+    );
+
+    const historicoRegistros = await this.historicoRepo.find({
+      where: {
+        barbeariaId,
+        telefoneCliente: telefone,
+      },
+      order: { createdAt: 'DESC' },
+      take: 40,
+    });
+    const historico = historicoRegistros
+      .reverse()
+      .map((registro) => ({
+        messageId: registro.messageId,
+        role: registro.role,
+        content: registro.content,
+        createdAt: registro.createdAt,
+      }));
+
+    const chatStatusRegistro = await this.atualizarStatusConversa(cliente.id, mensagemProcessada);
+
+    return {
+      evento,
+      direcao: mensagemProcessada?.direcao ?? null,
+      barbeariaId,
+      cliente: {
+        id: cliente.id,
+        nome: cliente.nome,
+        telefone: cliente.telefone,
+      },
+      mensagem: mensagemProcessada,
+      statusConexao,
+      chatStatus: chatStatusRegistro?.status ?? 1,
+      historico,
     };
   }
 
@@ -429,6 +508,382 @@ export class AiAgentService {
     }
     const normalizado = status.toString().toLowerCase();
     return normalizado === 'connected' || normalizado === 'open';
+  }
+
+  private extrairInstance(dto: EvolutionWebhookDto): string | null {
+    const candidatos = [
+      dto.body?.Instance,
+      dto.body?.instance,
+      dto.body?.InstanceName,
+    ];
+
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    if (data) {
+      const possiveis = [
+        data.instanceName,
+        data.instance,
+        data.Instance,
+      ];
+      for (const valor of possiveis) {
+        if (typeof valor === 'string' && valor.trim()) {
+          candidatos.push(valor);
+        }
+      }
+    }
+
+    return (
+      candidatos.find((valor) => typeof valor === 'string' && valor.trim().length) ?? null
+    );
+  }
+
+  private normalizarInstance(instance: string) {
+    return instance.replace(/\s+/g, '').replace(/-/g, '');
+  }
+
+  private async resolverConexaoPorInstance(instanceNormalizada: string, original?: string) {
+    if (original) {
+      const conexaoDireta = await this.conexaoRepo.findOne({
+        where: { instanceName: original },
+      });
+      if (conexaoDireta) {
+        return conexaoDireta;
+      }
+    }
+
+    const conexaoPadrao = await this.conexaoRepo.findOne({
+      where: { instanceName: instanceNormalizada },
+    });
+    if (conexaoPadrao) {
+      return conexaoPadrao;
+    }
+
+    return this.conexaoRepo
+      .createQueryBuilder('conexao')
+      .where('LOWER(REPLACE(conexao.instanceName, \'-\', \'\')) = :instance', {
+        instance: instanceNormalizada.toLowerCase(),
+      })
+      .getOne();
+  }
+
+  private async resolverTelefoneCliente(barbeariaId: string, dto: EvolutionWebhookDto) {
+    const candidatos: Array<unknown> = [
+      dto.body?.Telefone,
+      dto.body?.telefone,
+      dto.message?.chat_id,
+      dto.message?.chatId,
+    ];
+
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const key =
+      (dto.body?.key as Record<string, unknown> | undefined) ??
+      ((data?.key as Record<string, unknown>) || undefined);
+
+    if (key) {
+      candidatos.push(key.remoteJid);
+      candidatos.push(key.participant);
+    }
+
+    if (data) {
+      candidatos.push(data.telefone);
+      candidatos.push(data.Telefone);
+    }
+
+    for (const candidato of candidatos) {
+      const telefone = this.extrairTelefoneDeValor(candidato);
+      if (telefone) {
+        return this.normalizarTelefoneCliente(telefone);
+      }
+    }
+
+    const messageId = this.extrairMessageId(dto);
+    if (messageId) {
+      const telefoneSalvo = await this.buscarTelefoneViaMessageId(barbeariaId, messageId);
+      if (telefoneSalvo) {
+        return this.normalizarTelefoneCliente(telefoneSalvo);
+      }
+    }
+
+    return null;
+  }
+
+  private extrairTelefoneDeValor(valor?: unknown): string | null {
+    if (!valor) {
+      return null;
+    }
+    if (typeof valor === 'string') {
+      if (valor.includes('@')) {
+        return valor.split('@')[0];
+      }
+      return valor;
+    }
+    if (typeof valor === 'number') {
+      return valor.toString();
+    }
+    return null;
+  }
+
+  private async buscarTelefoneViaMessageId(barbeariaId: string, messageId?: string | null) {
+    if (!messageId) {
+      return null;
+    }
+    const id = messageId.toString().trim();
+    if (!id) {
+      return null;
+    }
+    const registro = await this.historicoRepo.findOne({
+      where: { barbeariaId, messageId: id },
+    });
+    return registro?.telefoneCliente ?? null;
+  }
+
+  private extrairMessageId(dto: EvolutionWebhookDto) {
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const key =
+      (dto.body?.key as Record<string, unknown> | undefined) ??
+      ((data?.key as Record<string, unknown>) || undefined);
+
+    const candidatos = [dto.body?.messageId, dto.messageId, key?.id];
+
+    for (const valor of candidatos) {
+      if (typeof valor === 'string') {
+        const texto = valor.trim();
+        if (texto.length) {
+          return texto;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private async sincronizarClienteEvolution(
+    barbeariaId: string,
+    telefone: string,
+    dto: EvolutionWebhookDto,
+  ) {
+    let cliente = await this.clienteRepo.findOne({
+      where: { barbeariaId, telefone },
+    });
+
+    const nome = this.sanitizarTexto(dto.body?.NomeWhatsapp ?? dto.body?.nome);
+
+    if (!cliente) {
+      cliente = this.clienteRepo.create({
+        barbeariaId,
+        telefone,
+        nome: nome ?? null,
+      });
+    } else if (nome) {
+      cliente.nome = cliente.nome ? cliente.nome : nome;
+    }
+
+    return this.clienteRepo.save(cliente);
+  }
+
+  private async processarMensagemEvolution(
+    barbeariaId: string,
+    cliente: ClienteEntity,
+    telefone: string,
+    dto: EvolutionWebhookDto,
+  ) {
+    const evento = dto.body?.event ?? dto.message?.event ?? '';
+    const possuiConteudo =
+      (typeof dto.message?.content === 'string' && dto.message.content.length > 0) ||
+      typeof this.extrairConteudoMensagem(dto) === 'string';
+
+    if (!evento.toLowerCase().includes('message') && !possuiConteudo) {
+      return null;
+    }
+
+    const conteudo = this.extrairConteudoMensagem(dto) ?? '';
+    const messageId = this.extrairMessageId(dto);
+    const fromMe = this.mensagemPartiuDaBarbearia(dto);
+    const direcao = fromMe ? 'saindo' : 'entrando';
+    const role: 'user' | 'assistant' = fromMe ? 'assistant' : 'user';
+    const timestamp = this.extrairTimestamp(dto);
+
+    if (messageId) {
+      const existente = await this.historicoRepo.findOne({
+        where: { barbeariaId, messageId },
+      });
+      if (existente) {
+        return {
+          id: messageId,
+          conteudo,
+          direcao,
+          role,
+          timestamp,
+        };
+      }
+    }
+
+    const registro = this.historicoRepo.create({
+      barbeariaId,
+      telefoneCliente: telefone,
+      telefoneBarbearia: null,
+      role,
+      content: conteudo,
+      ...(messageId ? { messageId } : {}),
+    });
+    await this.historicoRepo.save(registro);
+
+    return {
+      id: messageId ?? registro.id,
+      conteudo,
+      direcao,
+      role,
+      timestamp,
+    };
+  }
+
+  private mensagemPartiuDaBarbearia(dto: EvolutionWebhookDto) {
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const key =
+      (dto.body?.key as Record<string, unknown> | undefined) ??
+      ((data?.key as Record<string, unknown>) || undefined);
+
+    if (key && typeof key.fromMe === 'boolean') {
+      return key.fromMe;
+    }
+
+    const evento = dto.message?.event?.toLowerCase();
+    if (evento) {
+      return evento === 'outgoing' || evento === 'outcoming';
+    }
+
+    return false;
+  }
+
+  private extrairConteudoMensagem(dto: EvolutionWebhookDto): string | null {
+    if (dto.message?.content) {
+      return dto.message.content;
+    }
+
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const mensagem = (data?.message as Record<string, unknown> | undefined) ?? undefined;
+    if (!mensagem) {
+      return null;
+    }
+
+    const candidatos = [
+      mensagem.conversation,
+      mensagem.text,
+      mensagem.body,
+    ];
+
+    for (const valor of candidatos) {
+      if (typeof valor === 'string' && valor.trim().length) {
+        return valor;
+      }
+    }
+
+    return null;
+  }
+
+  private extrairTimestamp(dto: EvolutionWebhookDto): Date | null {
+    const candidatos: Array<unknown> = [
+      dto.message?.timestamp,
+    ];
+
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    if (data) {
+      candidatos.push(data.timestamp);
+      candidatos.push(data.messageTimestamp);
+    }
+
+    for (const valor of candidatos) {
+      const dataConvertida = this.converterParaData(valor);
+      if (dataConvertida) {
+        return dataConvertida;
+      }
+    }
+
+    return null;
+  }
+
+  private converterParaData(valor: unknown): Date | null {
+    if (!valor) {
+      return null;
+    }
+    if (valor instanceof Date) {
+      return valor;
+    }
+    if (typeof valor === 'number') {
+      return new Date(valor);
+    }
+    if (typeof valor === 'string') {
+      if (!valor.trim()) {
+        return null;
+      }
+      const somenteNumeros = /^\d+$/.test(valor);
+      if (somenteNumeros) {
+        const numero = Number(valor);
+        if (!Number.isNaN(numero)) {
+          return numero > 1_000_000_000_000 ? new Date(numero) : new Date(numero * 1000);
+        }
+      }
+      const data = new Date(valor);
+      return Number.isNaN(data.getTime()) ? null : data;
+    }
+    return null;
+  }
+
+  private extrairStatusDaConexao(dto: EvolutionWebhookDto): string | null {
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    if (!data) {
+      return null;
+    }
+
+    const candidatos = [data.state, data.status, data.connectionState, data.connectionStatus];
+    const encontrado = candidatos.find((valor) => typeof valor === 'string' && valor.trim().length);
+    return encontrado ? String(encontrado) : null;
+  }
+
+  private async atualizarStatusConversa(
+    clienteId: string,
+    mensagem?: { direcao: string | null } | null,
+  ) {
+    let status = await this.chatStatusRepo.findOne({
+      where: { clienteId },
+    });
+
+    if (!status) {
+      status = this.chatStatusRepo.create({
+        clienteId,
+        status: 1,
+        metadados: null,
+      });
+    }
+
+    if (mensagem?.direcao === 'entrando') {
+      status.status = 1;
+    }
+
+    const metadadosAtual =
+      (status.metadados as Record<string, unknown> | null) ?? {};
+    const ultimaDirecaoAnterior =
+      metadadosAtual && typeof (metadadosAtual as any).ultimaDirecao === 'string'
+        ? ((metadadosAtual as any).ultimaDirecao as string)
+        : null;
+
+    status.metadados = {
+      ...metadadosAtual,
+      ultimaDirecao: mensagem?.direcao ?? ultimaDirecaoAnterior,
+    };
+
+    return this.chatStatusRepo.save(status);
+  }
+
+  private normalizarTelefoneCliente(telefone: string) {
+    return telefone.replace(/\s+/g, '');
+  }
+
+  private sanitizarTexto(texto?: string | null) {
+    if (texto === undefined || texto === null) {
+      return undefined;
+    }
+    const valor = texto.toString().trim();
+    return valor.length ? valor : undefined;
   }
 
   private obterConfiguracaoPadraoValores(): Pick<

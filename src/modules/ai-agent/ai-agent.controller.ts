@@ -27,6 +27,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 import { ConsultarBarbeariaWebhookDto } from './dto/consultar-barbearia-webhook.dto';
+import { EvolutionWebhookDto } from './dto/evolution-webhook.dto';
 
 @Controller('ia')
 @UsePipes(
@@ -43,6 +44,14 @@ export class AiAgentController {
   async perguntar(@Body() dto: PerguntarDto) {
     this.validarTokenOuErro(dto.token);
     return this.aiAgentService.perguntar(dto);
+  }
+
+  @Post('evolution/webhook')
+  async evolutionWebhook(@Body() dto) {
+
+    this.validarTokenOuErro(dto.token);
+
+    return this.aiAgentService.processarEvolutionWebhook(dto);
   }
 
   @Post('barbearia-webhook')
