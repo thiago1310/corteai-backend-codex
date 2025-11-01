@@ -1,0 +1,36 @@
+{
+    "token": "lakddfjjj4jjtj54i95i595955t54g4g47g4hs5df4g4sfdgSDFGgf5gXFBNASEWWERVGGH",
+    "body": {
+        "event": "messages.upsert",
+        "instance": "54e9fdd2b9d64563b41a2cd640bc401c",
+        "data": {
+            "key": {
+                "remoteJid": "554837217087@s.whatsapp.net",
+                "fromMe": false,
+                "id": "2A248481740BB19946F4"
+            },
+            "pushName": "TI - CDS",
+            "message": {
+                "conversation": "Oi",
+                "messageContextInfo": {
+                    "deviceListMetadata": {
+                        "senderTimestamp": "1762002676",
+                        "recipientKeyHash": "ICR+b6GVho6ZCQ==",
+                        "recipientTimestamp": "1761748829"
+                    },
+                    "deviceListMetadataVersion": 2,
+                    "messageSecret": "zXA/nKiI6RgRTWzBxkwQ0Ngfg13UfpNdLUi83ciSCz4="
+                }
+            },
+            "messageType": "conversation",
+            "messageTimestamp": 1762019042,
+            "owner": "54e9fdd2b9d64563b41a2cd640bc401c",
+            "source": "unknown"
+        },
+        "destination": "https://n8n.seu.dev.br/webhook/wp-thiago",
+        "date_time": "2025-11-01T14:44:00.835Z",
+        "sender": "554896591495@s.whatsapp.net",
+        "server_url": "http://localhost:8080",
+        "apikey": "54e9fdd2b9d64563b41a2cd640bc401c"
+    }
+}

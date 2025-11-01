@@ -66,6 +66,10 @@ export class EvolutionWebhookBodyDto {
 
   @IsOptional()
   @IsString()
+  sender?: string;
+
+  @IsOptional()
+  @IsString()
   messageId?: string;
 
   @IsOptional()

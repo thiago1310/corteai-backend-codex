@@ -9,6 +9,7 @@ import { ClienteEntity } from '../clientes/clientes.entity';
 import { ChatHistoryEntity } from './entities/chat-history.entity';
 import { ChatStatusEntity } from './entities/chat-status.entity';
 import { ConexaoEvolutionEntity } from './entities/conexao-evolution.entity';
+import { WhatsappMessageMappingEntity } from './entities/whatsapp-message-mapping.entity';
 
 type MockRepo<T> = {
   findOne: jest.Mock;
@@ -43,6 +44,7 @@ const createService = (overrides?: {
   configuracaoRepo?: Partial<MockRepo<ConfiguracaoAgenteEntity>>;
   barbeariaRepo?: Partial<MockRepo<BarbeariaEntity>>;
   chatStatusRepo?: Partial<MockRepo<ChatStatusEntity>>;
+  whatsappMappingRepo?: Partial<MockRepo<WhatsappMessageMappingEntity>>;
 }) => {
   const historicoRepo = createRepo<ChatHistoryEntity>(overrides?.historicoRepo);
   const clienteRepo = createRepo<ClienteEntity>(overrides?.clienteRepo);
@@ -54,6 +56,9 @@ const createService = (overrides?: {
   );
   const barbeariaRepo = createRepo<BarbeariaEntity>(overrides?.barbeariaRepo);
   const chatStatusRepo = createRepo<ChatStatusEntity>(overrides?.chatStatusRepo);
+  const whatsappMappingRepo = createRepo<WhatsappMessageMappingEntity>(
+    overrides?.whatsappMappingRepo,
+  );
 
   const service = new AiAgentService(
     {} as any,
@@ -67,6 +72,7 @@ const createService = (overrides?: {
     configuracaoRepo as any,
     barbeariaRepo as any,
     chatStatusRepo as any,
+    whatsappMappingRepo as any,
   );
 
   return {
@@ -77,6 +83,7 @@ const createService = (overrides?: {
     configuracaoRepo,
     barbeariaRepo,
     chatStatusRepo,
+    whatsappMappingRepo,
   };
 };
 
@@ -275,7 +282,14 @@ describe('AiAgentService - evolution webhook', () => {
       status: 'connected',
     } as ConexaoEvolutionEntity;
 
-    const { service, conexaoRepo, clienteRepo, historicoRepo, chatStatusRepo } = createService({
+    const {
+      service,
+      conexaoRepo,
+      clienteRepo,
+      historicoRepo,
+      chatStatusRepo,
+      whatsappMappingRepo,
+    } = createService({
       conexaoRepo: {
         findOne: jest.fn().mockResolvedValueOnce(conexao),
       },
@@ -314,19 +328,21 @@ describe('AiAgentService - evolution webhook', () => {
 
     const dto: EvolutionWebhookDto = {
       token: 'cliente-token',
-      message: {
-        chat_id: '5511999999999',
-        content_type: 'text',
-        content: 'Funciona ?',
-        timestamp: '2024-05-05T10:00:00Z',
-        event: 'incoming',
-      },
       body: {
         event: 'messages.upsert',
-        Telefone: '+55 11 99999-9999',
-        NomeWhatsapp: 'Joao',
-        Instance: 'INST001',
-        messageId: 'msg-123',
+        instance: 'INST001',
+        sender: '5511999999999@s.whatsapp.net',
+        data: {
+          key: {
+            remoteJid: '5511999999999@s.whatsapp.net',
+            fromMe: false,
+            id: 'msg-123',
+          },
+          message: {
+            conversation: 'Funciona ?',
+          },
+          messageTimestamp: Date.now(),
+        },
       },
     };
 
@@ -336,6 +352,7 @@ describe('AiAgentService - evolution webhook', () => {
     expect(clienteRepo.save).toHaveBeenCalled();
     expect(historicoRepo.save).toHaveBeenCalled();
     expect(chatStatusRepo.save).toHaveBeenCalled();
+    expect(whatsappMappingRepo.save).toHaveBeenCalled();
     expect(resultado.cliente?.id).toBe('cliente-1');
     expect(resultado.mensagem?.conteudo).toBe('Funciona ?');
     expect(resultado.direcao).toBe('entrando');
@@ -392,8 +409,7 @@ describe('AiAgentService - evolution webhook', () => {
       token: 'cliente-token',
       body: {
         event: 'connection.update',
-        Instance: 'INST002',
-        Telefone: '+55 11 88888-7777',
+        instance: 'INST002',
         data: {
           state: 'open',
         },
@@ -404,5 +420,131 @@ describe('AiAgentService - evolution webhook', () => {
 
     expect(conexaoRepo.save).toHaveBeenCalledWith(expect.objectContaining({ status: 'open' }));
     expect(resultado.statusConexao).toBe('open');
+  });
+
+  it('resolves telefone via stanza mapping when payload usa @lid', async () => {
+    const barbeariaId = 'barb-3';
+    const conexao: ConexaoEvolutionEntity = {
+      id: 'cx-3',
+      barbeariaId,
+      instanceName: 'INST003',
+      status: 'connected',
+    } as ConexaoEvolutionEntity;
+
+    const mapa = new Map<string, { telefone: string }>([
+      ['msg-original', { telefone: '+55 11 98888-2222' }],
+    ]);
+
+    const { service, conexaoRepo, clienteRepo, historicoRepo, chatStatusRepo, whatsappMappingRepo } =
+      createService({
+        conexaoRepo: {
+          findOne: jest.fn().mockResolvedValueOnce(conexao),
+        },
+      whatsappMappingRepo: {
+        findOne: jest.fn().mockImplementation(async ({ where }) => mapa.get(where.stanzaId) ?? null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => entity),
+      },
+      clienteRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => ({
+          ...entity,
+          id: 'cliente-3',
+        })),
+      },
+      historicoRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => ({
+          ...entity,
+          id: 'hist-3',
+          createdAt: new Date('2024-01-02T10:00:00Z'),
+        })),
+        find: jest.fn().mockResolvedValue([]),
+      },
+      chatStatusRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => entity),
+      },
+    });
+
+    const dto: EvolutionWebhookDto = {
+      token: 'cliente-token',
+      body: {
+        event: 'messages.upsert',
+        instance: 'INST003',
+        sender: '18915086323963@lid',
+        data: {
+          key: {
+            remoteJid: '18915086323963@lid',
+            fromMe: false,
+            id: 'msg-nova',
+          },
+          message: {
+            extendedTextMessage: {
+              contextInfo: {
+                stanzaId: 'msg-original',
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const resultado = await service.processarEvolutionWebhook(dto);
+
+    expect(conexaoRepo.findOne).toHaveBeenCalled();
+    expect(clienteRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ telefone: '5511988882222' }),
+    );
+    expect(historicoRepo.save).toHaveBeenCalled();
+    expect(chatStatusRepo.save).toHaveBeenCalled();
+    expect(whatsappMappingRepo.save).toHaveBeenCalled();
+    expect(resultado.ignorado).toBeUndefined();
+    expect(resultado.mensagem?.direcao).toBe('entrando');
+  });
+
+  it('ignores mensagens sem telefone resolvido nem referencia', async () => {
+    const barbeariaId = 'barb-4';
+    const conexao: ConexaoEvolutionEntity = {
+      id: 'cx-4',
+      barbeariaId,
+      instanceName: 'INST004',
+      status: 'connected',
+    } as ConexaoEvolutionEntity;
+
+    const { service, conexaoRepo, clienteRepo, historicoRepo, chatStatusRepo } = createService({
+      conexaoRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(conexao),
+      },
+    });
+
+    const dto: EvolutionWebhookDto = {
+      token: 'cliente-token',
+      body: {
+        event: 'messages.upsert',
+        instance: 'INST004',
+        sender: '18915086323963@lid',
+        data: {
+          key: {
+            remoteJid: '18915086323963@lid',
+            fromMe: false,
+            id: 'msg-sem-ref',
+          },
+        },
+      },
+    };
+
+    const resultado = await service.processarEvolutionWebhook(dto);
+
+    expect(conexaoRepo.findOne).toHaveBeenCalled();
+    expect(resultado).toEqual(
+      expect.objectContaining({ ignorado: true, motivo: 'telefone_nao_resolvido' }),
+    );
+    expect(clienteRepo.save).not.toHaveBeenCalled();
+    expect(historicoRepo.save).not.toHaveBeenCalled();
+    expect(chatStatusRepo.save).not.toHaveBeenCalled();
   });
 });

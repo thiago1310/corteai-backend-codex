@@ -48,9 +48,7 @@ export class AiAgentController {
 
   @Post('evolution/webhook')
   async evolutionWebhook(@Body() dto) {
-
     this.validarTokenOuErro(dto.token);
-
     return this.aiAgentService.processarEvolutionWebhook(dto);
   }
 

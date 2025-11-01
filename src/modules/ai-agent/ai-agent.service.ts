@@ -32,6 +32,7 @@ import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 import { DEFAULT_AGENT_NAME, DEFAULT_AGENT_PROMPT } from './ai-agent.constants';
 import { ConsultarBarbeariaWebhookDto } from './dto/consultar-barbearia-webhook.dto';
 import { EvolutionWebhookDto } from './dto/evolution-webhook.dto';
+import { WhatsappMessageMappingEntity } from './entities/whatsapp-message-mapping.entity';
 
 @Injectable()
 export class AiAgentService {
@@ -55,6 +56,8 @@ export class AiAgentService {
     private readonly barbeariaRepo: Repository<BarbeariaEntity>,
     @InjectRepository(ChatStatusEntity)
     private readonly chatStatusRepo: Repository<ChatStatusEntity>,
+    @InjectRepository(WhatsappMessageMappingEntity)
+    private readonly whatsappMappingRepo: Repository<WhatsappMessageMappingEntity>,
   ) { }
 
   async perguntar(dto: PerguntarDto) {
@@ -177,39 +180,61 @@ export class AiAgentService {
 
   async processarEvolutionWebhook(dto) {
     this.validarToken(dto.token);
-
     const instanceExtraida = this.extrairInstance(dto);
+
     if (!instanceExtraida) {
       throw new BadRequestException('Instance nao informada no webhook.');
     }
 
     const instanceNormalizada = this.normalizarInstance(instanceExtraida);
+
     const conexao = await this.resolverConexaoPorInstance(instanceNormalizada, instanceExtraida);
+
     if (!conexao) {
       throw new BadRequestException('Instancia Evolution nao encontrada.');
     }
 
     const barbeariaId = conexao.barbeariaId;
 
-    const telefone = await this.resolverTelefoneCliente(barbeariaId, dto);
-    if (!telefone) {
-      throw new BadRequestException('Nao foi possivel determinar o telefone do cliente.');
-    }
 
-    const cliente = await this.sincronizarClienteEvolution(barbeariaId, telefone, dto);
+    const evento = dto.body?.event ?? dto.message?.event ?? null;
+    const eventoLower = evento?.toLowerCase() ?? '';
 
-    const evento = dto.body?.event ?? null;
+
     let statusConexao = conexao.status ?? null;
 
-    if (evento && evento.toLowerCase() === 'connection.update') {
+    if (eventoLower === 'connection.update') {
       const novoStatus = this.extrairStatusDaConexao(dto);
       if (novoStatus && novoStatus !== conexao.status) {
         conexao.status = novoStatus;
         await this.conexaoRepo.save(conexao);
         statusConexao = novoStatus;
       }
-      return;
+
+      return {
+        evento,
+        direcao: null,
+        barbeariaId,
+        cliente: null,
+        mensagem: null,
+        statusConexao,
+        chatStatus: null,
+        historico: [],
+      };
     }
+
+    const telefone = await this.resolverTelefoneCliente(barbeariaId, dto);
+
+    if (!telefone) {
+      return {
+        ignorado: true,
+        motivo: 'telefone_nao_resolvido',
+        evento,
+        barbeariaId,
+      };
+    }
+
+    const cliente = await this.sincronizarClienteEvolution(barbeariaId, telefone, dto);
 
     const mensagemProcessada = await this.processarMensagemEvolution(
       barbeariaId,
@@ -376,14 +401,14 @@ export class AiAgentService {
   async obterDetalhesInstancia(barbeariaId: string) {
     const instanceName = this.normalizarUsuarioId(barbeariaId);
     const instancias = await this.evolutionApi.buscarInstancias();
-    console.log('instancias', instancias)
+
     const detalhe = instancias.find(
       (item) =>
 
         item.instanceName.replace(/-/g, '').toLowerCase() === instanceName.replace(/-/g, '').toLowerCase(),
     );
 
-    console.log('detalhes', detalhe);
+;
     if (!detalhe) {
       return null;
     }
@@ -566,40 +591,41 @@ export class AiAgentService {
   }
 
   private async resolverTelefoneCliente(barbeariaId: string, dto: EvolutionWebhookDto) {
+    const data = dto.body?.data ?? {};
+    const key = (data as Record<string, unknown>)?.key as Record<string, unknown> | undefined;
+
     const candidatos: Array<unknown> = [
-      dto.body?.Telefone,
-      dto.body?.telefone,
-      dto.message?.chat_id,
-      dto.message?.chatId,
+      key?.remoteJid,
+      dto.body?.sender,
+      key?.participant,
+      (data as Record<string, unknown>)?.telefone,
+      (data as Record<string, unknown>)?.Telefone,
     ];
-
-    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
-    const key =
-      (dto.body?.key as Record<string, unknown> | undefined) ??
-      ((data?.key as Record<string, unknown>) || undefined);
-
-    if (key) {
-      candidatos.push(key.remoteJid);
-      candidatos.push(key.participant);
-    }
-
-    if (data) {
-      candidatos.push(data.telefone);
-      candidatos.push(data.Telefone);
-    }
 
     for (const candidato of candidatos) {
       const telefone = this.extrairTelefoneDeValor(candidato);
-      if (telefone) {
+      if (telefone && !this.ehTelefonePlaceholder(telefone)) {
         return this.normalizarTelefoneCliente(telefone);
+      }
+    }
+
+    const stanzaId = this.extrairStanzaId(dto);
+    if (stanzaId) {
+      const telefoneStanza = await this.buscarTelefonePorStanza(barbeariaId, stanzaId);
+      if (telefoneStanza) {
+        return this.normalizarTelefoneCliente(telefoneStanza);
       }
     }
 
     const messageId = this.extrairMessageId(dto);
     if (messageId) {
       const telefoneSalvo = await this.buscarTelefoneViaMessageId(barbeariaId, messageId);
-      if (telefoneSalvo) {
+      if (telefoneSalvo && !this.ehTelefonePlaceholder(telefoneSalvo)) {
         return this.normalizarTelefoneCliente(telefoneSalvo);
+      }
+      const telefoneMapeado = await this.buscarTelefonePorStanza(barbeariaId, messageId);
+      if (telefoneMapeado) {
+        return this.normalizarTelefoneCliente(telefoneMapeado);
       }
     }
 
@@ -611,9 +637,6 @@ export class AiAgentService {
       return null;
     }
     if (typeof valor === 'string') {
-      if (valor.includes('@')) {
-        return valor.split('@')[0];
-      }
       return valor;
     }
     if (typeof valor === 'number') {
@@ -654,6 +677,47 @@ export class AiAgentService {
     }
 
     return null;
+  }
+
+  private extrairStanzaId(dto: EvolutionWebhookDto) {
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const mensagem = (data?.message as Record<string, unknown> | undefined) ?? undefined;
+    const extended =
+      (mensagem?.extendedTextMessage as Record<string, unknown> | undefined) ?? undefined;
+    const context =
+      (extended?.contextInfo as Record<string, unknown> | undefined) ?? undefined;
+
+    const candidatos = [
+      context?.stanzaId,
+      context?.stanzaid,
+      context?.quotedStanzaID,
+      context?.stanzaID,
+    ];
+
+    for (const valor of candidatos) {
+      if (typeof valor === 'string') {
+        const texto = valor.trim();
+        if (texto.length) {
+          return texto;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private async buscarTelefonePorStanza(barbeariaId: string, stanzaId?: string | null) {
+    if (!stanzaId) {
+      return null;
+    }
+    const id = stanzaId.toString().trim();
+    if (!id) {
+      return null;
+    }
+    const mapping = await this.whatsappMappingRepo.findOne({
+      where: { barbeariaId, stanzaId: id },
+    });
+    return mapping?.telefone ?? null;
   }
 
   private async sincronizarClienteEvolution(
@@ -703,6 +767,7 @@ export class AiAgentService {
     const timestamp = this.extrairTimestamp(dto);
 
     if (messageId) {
+      await this.registrarTelefonePorMessageId(barbeariaId, telefone, messageId);
       const existente = await this.historicoRepo.findOne({
         where: { barbeariaId, messageId },
       });
@@ -726,6 +791,8 @@ export class AiAgentService {
       ...(messageId ? { messageId } : {}),
     });
     await this.historicoRepo.save(registro);
+    const idParaMapeamento = messageId ?? registro.messageId ?? registro.id.toString();
+    await this.registrarTelefonePorMessageId(barbeariaId, telefone, idParaMapeamento);
 
     return {
       id: messageId ?? registro.id,
@@ -874,8 +941,55 @@ export class AiAgentService {
     return this.chatStatusRepo.save(status);
   }
 
+  private async registrarTelefonePorMessageId(
+    barbeariaId: string,
+    telefone: string,
+    messageId?: string | null,
+  ) {
+    if (!messageId) {
+      return;
+    }
+    const id = messageId.toString().trim();
+    if (!id) {
+      return;
+    }
+
+    const telefoneNormalizado = this.normalizarTelefoneCliente(telefone);
+    let mapping = await this.whatsappMappingRepo.findOne({
+      where: { barbeariaId, stanzaId: id },
+    });
+
+    if (!mapping) {
+      mapping = this.whatsappMappingRepo.create({
+        barbeariaId,
+        stanzaId: id,
+        messageId: id,
+        telefone: telefoneNormalizado,
+      });
+    } else {
+      mapping.telefone = telefoneNormalizado;
+      if (!mapping.messageId) {
+        mapping.messageId = id;
+      }
+    }
+
+    await this.whatsappMappingRepo.save(mapping);
+  }
+
   private normalizarTelefoneCliente(telefone: string) {
-    return telefone.replace(/\s+/g, '');
+    const apenasDigitos = telefone.replace(/\D/g, '');
+    return apenasDigitos || telefone.replace(/\s+/g, '');
+  }
+
+  private ehTelefonePlaceholder(telefone: string) {
+    const valor = telefone.toLowerCase();
+    if (valor.includes('@s.whatsapp.net')) {
+      return false;
+    }
+    if (valor.includes('@lid')) {
+      return true;
+    }
+    return valor.includes('@');
   }
 
   private sanitizarTexto(texto?: string | null) {

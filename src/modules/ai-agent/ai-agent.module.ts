@@ -16,6 +16,7 @@ import { ConfiguracaoAgenteEntity } from './entities/configuracao-agente.entity'
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { ChatStatusEntity } from './entities/chat-status.entity';
 import { ClienteEntity } from '../clientes/clientes.entity';
+import { WhatsappMessageMappingEntity } from './entities/whatsapp-message-mapping.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ClienteEntity } from '../clientes/clientes.entity';
       ConfiguracaoAgenteEntity,
       BarbeariaEntity,
       ChatStatusEntity,
+      WhatsappMessageMappingEntity,
     ]),
   ],
   controllers: [AiAgentController],
