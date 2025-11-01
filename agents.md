@@ -194,5 +194,6 @@ Ao iniciar um novo servico baseado neste template:
 2. **Configure o `.env`** com as chaves existentes (e novas, se necessario).
 3. **Implemente DTOs e Guards** seguindo o padrao atual.
 4. **Atualize documentacao e Postman** para manter o time sincronizado. Sempre que modificar a colecao no Postman, exporte e substitua o `postmen.json` deste repositorio e tambem o arquivo localizado em `E:\Projetos\corteai-codex\postmen.json`.
+5. **Antes de implementar qualquer mudanca solicitada em codigo**, elabore um plano de execucao, apresente-o e confirme com o solicitante se deve prosseguir com o plano.
 
 Esse guia serve como checklist rapido para que um novo agente seja consistente com o projeto CorteAI atual. Ajuste-o conforme evolucoes futuras na arquitetura.

@@ -1042,13 +1042,13 @@
 							}
 						],
 						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"instanceName\": \"54e9fdd2b9d64563b41a2cd640bc401c\",\n  \"telefone\": \"+5548999352716\",\n  \"nome\":\"Jéssica Wilvert\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/clientes/evolution/sincronizar",
-							"host": [
-								"{{baseUrl}}"
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"instanceName\": \"54e9fdd2b9d64563b41a2cd640bc401c\",\n  \"messageId\": \"whatsapp-msg-123\",\n  \"nome\": \"Jessica Wilvert\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes/evolution/sincronizar",
+              "host": [
+                "{{baseUrl}}"
 							],
 							"path": [
 								"clientes",

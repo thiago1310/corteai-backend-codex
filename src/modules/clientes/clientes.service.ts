@@ -125,7 +125,33 @@ export class ClientesService {
     const instanceNormalizada = this.normalizarInstance(dto.instanceName);
     const conexao = await this.conexaoPorInstance(instanceNormalizada);
 
-    const telefone = this.normalizarTelefone(dto.telefone);
+    const telefonePayload = dto.telefone ? this.normalizarTelefone(dto.telefone) : undefined;
+    let telefone = telefonePayload;
+
+    if (!telefone) {
+      const messageIdNormalizado = dto.messageId?.toString().trim();
+      if (!messageIdNormalizado) {
+        throw new BadRequestException('Informe o telefone ou um messageId valido.');
+      }
+
+      const chat = await this.chatHistoryRepo.findOne({
+        where: {
+          messageId: messageIdNormalizado,
+          barbeariaId: conexao.barbeariaId,
+        },
+        order: { createdAt: 'DESC' },
+      });
+
+      if (!chat || !chat.telefoneCliente) {
+        throw new BadRequestException('Telefone nao encontrado para o messageId informado.');
+      }
+
+      telefone = this.normalizarTelefone(chat.telefoneCliente);
+    }
+
+    if (!telefone) {
+      throw new BadRequestException('Nao foi possivel determinar o telefone do cliente.');
+    }
 
     let cliente = await this.clientesRepo.findOne({
       where: { barbeariaId: conexao.barbeariaId, telefone },

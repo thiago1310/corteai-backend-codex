@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class SincronizarClienteEvolutionDto {
   @IsString()
@@ -9,9 +9,15 @@ export class SincronizarClienteEvolutionDto {
   @IsNotEmpty()
   instanceName!: string;
 
+  @ValidateIf((dto) => !dto.messageId)
   @IsString()
   @IsNotEmpty()
-  telefone!: string;
+  telefone?: string;
+
+  @ValidateIf((dto) => !dto.telefone)
+  @IsString()
+  @IsNotEmpty()
+  messageId?: string;
 
   @IsOptional()
   @IsString()
