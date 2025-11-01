@@ -1,16 +1,16 @@
-# CorteAI Backend – Project Blueprint for New Agents
+﻿# CorteAI Backend – Project Blueprint for New Agents
 
-Este documento resume os principais componentes de infraestrutura e organização utilizados no projeto **corteai-backend-codex**. Utilize-o como referência ao criar um novo serviço “agente” que deva seguir a mesma estrutura de pastas, configuração e padrões.
+Este documento resume os principais componentes de infraestrutura e organizacao utilizados no projeto **corteai-backend-codex**. Utilize-o como referencia ao criar um novo servico "agente" que deva seguir a mesma estrutura de pastas, configuracao e padroes.
 
 ---
 
-## 1. Visão Geral
+## 1. Visao Geral
 
 - **Framework**: NestJS + TypeORM.
-- **Banco de dados**: PostgreSQL (schema padrão definido por `DEFAULT_SCHEMA` / `public`).
-- **Ambientação**: Configurações via `.env` e `ConfigModule` global.
-- **Estrutura modular**: Cada domínio possui módulo próprio em `src/modules/<domínio>`.
-- **Autenticação**: JWT (`AuthModule`), com `JwtAuthGuard` aplicado aos endpoints que requerem login.
+- **Banco de dados**: PostgreSQL (schema padrao definido por `DEFAULT_SCHEMA` / `public`).
+- **Ambientacao**: Configuracoes via `.env` e `ConfigModule` global.
+- **Estrutura modular**: Cada dominio possui modulo proprio em `src/modules/<dominio>`.
+- **Autenticacao**: JWT (`AuthModule`), com `JwtAuthGuard` aplicado aos endpoints que requerem login.
 
 ---
 
@@ -19,12 +19,12 @@ Este documento resume os principais componentes de infraestrutura e organizaçã
 ```
 .
 ├── agents.md                 # Este blueprint.
-├── .env                      # Configurações sensíveis (amostragem abaixo).
+├── .env                      # Configuracoes sensiveis (amostragem abaixo).
 ├── src
-│   ├── app.module.ts         # Registro global dos módulos.
+│   ├── app.module.ts         # Registro global dos modulos.
 │   ├── main.ts               # Bootstrap NestJS.
 │   └── modules
-│       ├── ai-agent          
+│       ├── ai-agent
 │       ├── agendamentos
 │       ├── auth
 │       ├── barbearias
@@ -32,21 +32,21 @@ Este documento resume os principais componentes de infraestrutura e organizaçã
 │       ├── config            # `database.config.ts`, naming strategy.
 │       ├── profissionais
 │       └── ...
-├── postmen.json              # Coleção Postman com exemplos de requisições.
+├── postmen.json              # Colecao Postman com exemplos de requisicoes.
 ├── package.json
 ├── tsconfig.json / tsconfig.build.json
 ├── eslint.config.mjs
 └── .prettierrc
 ```
 
-### Módulo-base para novos agentes
-Ao criar um novo módulo, reproduzir o padrão:
+### Modulo-base para novos agentes
+Ao criar um novo modulo, reproduzir o padrao:
 
 ```
 src/modules/<nome-agente>/
-├── dto/                      # DTOs (validação via class-validator)
+├── dto/                      # DTOs (validacao via class-validator)
 ├── entities/                 # Entities TypeORM
-├── services/                 # Serviços internos
+├── services/                 # Servicos internos
 ├── <nome-agente>.controller.ts
 ├── <nome-agente>.service.ts
 └── <nome-agente>.module.ts   # Importa TypeOrmModule.forFeature, providers e controllers
@@ -54,9 +54,9 @@ src/modules/<nome-agente>/
 
 ---
 
-## 3. Configuração `.env`
+## 3. Configuracao `.env`
 
-Exemplo de variáveis necessárias:
+Exemplo de variaveis necessarias:
 
 ```
 JWT_SECRET=...
@@ -74,17 +74,17 @@ CLIENTES_WEBHOOK_TOKEN=...
 token_thiago=thiagojw
 ```
 
-> **Observações**:
-> - `CLIENTES_WEBHOOK_TOKEN` autentica os webhooks externos (RAG, sincronização Evolution, chat status).
-> - Use a mesma convenção de *snake_case* para novas chaves.
+> **Observacoes**:
+> - `CLIENTES_WEBHOOK_TOKEN` autentica os webhooks externos (RAG, sincronizacao Evolution, chat status).
+> - Use a mesma convencao de *snake_case* para novas chaves.
 
 ---
 
 ## 4. Banco e Mapeamentos
 
-- `TypeOrmModule.forRoot(databaseConfig())` habilita o carregamento automático de entidades em `src/modules/**/entities/*.entity.ts`.
+- `TypeOrmModule.forRoot(databaseConfig())` habilita o carregamento automatico de entidades em `src/modules/**/entities/*.entity.ts`.
 - Nome das tabelas definido no decorator `@Entity({ name: '...' })`.
-- Convenção de colunas com `snake_case`.
+- Convencao de colunas com `snake_case`.
 - Strategy personalizada em `src/modules/config/CustomNamingstrategy.ts`.
 
 **Exemplo de entity (chat status):**
@@ -111,20 +111,20 @@ export class ChatStatusEntity {
 
 ---
 
-## 5. Endpoints e Autenticação
+## 5. Endpoints e Autenticacao
 
-### 5.1 JWT Guard (padrão)
+### 5.1 JWT Guard (padrao)
 - Aplicado com `@UseGuards(JwtAuthGuard)` em rotas `POST/GET/PATCH` internas.
 - Payload do JWT (vide `JwtStrategy`): `{ sub, email, scope }`.
 
 ### 5.2 Token Webhook (`CLIENTES_WEBHOOK_TOKEN`)
-- Endpoints públicos do módulo **AI Agent** exigem o token no body/query, sem JWT:
+- Endpoints publicos do modulo **AI Agent** exigem o token no body/query, sem JWT:
   - `POST /ia/perguntar`
   - `POST /ia/chat-externo`
   - `POST /ia/chat-status`
   - `GET /ia/chat-status`
   - `POST /clientes/evolution/sincronizar`
-- Validação centralizada em `AiAgentService.validarToken`.
+- Validacao centralizada em `AiAgentService.validarToken`.
 
 ### 5.3 Estrutura de DTOs
 Utilize `class-validator` e `class-transformer`:
@@ -149,50 +149,50 @@ export class UpsertChatStatusDto {
 
 ---
 
-## 6. Interações Principais
+## 6. Interacoes Principais
 
-| Área                 | Descrição                                                                                 |
+| Area                 | Descricao                                                                                 |
 |----------------------|-------------------------------------------------------------------------------------------|
-| AI / RAG             | `AiAgentService.perguntar` consulta RAG (`RagService`), registra histórico e sincroniza cliente. |
-| Evolution            | Endpoints `/ia/evolution/*` gerenciam sessões via `EvolutionApiService`.                   |
-| Clientes             | Módulo `clientes` cria/atualiza registros vinculados a barbearias, integrando com Evolution. |
-| Histórico Externo    | `POST /ia/chat-externo` registra conversas de fontes externas e, quando `role=assistant`, persiste pair `chat_messages`. |
-| Status do Chat       | `chat_status` mantém status por cliente (via token).                                       |
+| AI / RAG             | `AiAgentService.perguntar` consulta RAG (`RagService`), registra historico e sincroniza cliente. |
+| Evolution            | Endpoints `/ia/evolution/*` gerenciam sessoes via `EvolutionApiService`.                   |
+| Clientes             | Modulo `clientes` cria/atualiza registros vinculados a barbearias, integrando com Evolution. |
+| Historico Externo    | `POST /ia/chat-externo` registra conversas de fontes externas e, quando `role=assistant`, persiste pair `chat_messages`. |
+| Status do Chat       | `chat_status` mantem status por cliente (via token).                                       |
 
 ---
 
-## 7. Scripts e Execução
+## 7. Scripts e Execucao
 
 Principais scripts (`package.json`):
 
-- `npm run start` – executar em modo produção.
-- `npm run start:dev` – NestJS com *watch mode*.
+- `npm run start` – executar em modo producao.
+- `npm run start:dev` – NestJS com watch mode.
 - `npm run test` / `test:e2e` – Jest.
 - `npm run lint` – ESLint.
 
-### Passos típicos para um novo agente
-1. Copiar estrutura básica do módulo (controller, service, module, dto, entities).
-2. Registrar o módulo em `app.module.ts`.
-3. Criar endpoints e DTOs seguindo padrão de validação.
-4. Atualizar Postman / documentação.
-5. Definir variáveis adicionais no `.env` (se necessárias).
+### Passos tipicos para um novo agente
+1. Copiar estrutura basica do modulo (controller, service, module, dto, entities).
+2. Registrar o modulo em `app.module.ts`.
+3. Criar endpoints e DTOs seguindo padrao de validacao.
+4. Atualizar Postman / documentacao.
+5. Definir variaveis adicionais no `.env` (se necessarias).
 
 ---
 
 ## 8. Postman
 
-- Coleção principal neste repositório: `postmen.json`.
-- Inclui chamadas para módulos `ai-agent`, `clientes`, `barbearias`, `auth`.
-- Ao criar novo módulo, adicione exemplos de requisições no Postman para facilitar integração.
+- Colecao principal neste repositorio: `postmen.json`.
+- Inclui chamadas para modulos `ai-agent`, `clientes`, `barbearias`, `auth`.
+- Ao criar novo modulo ou metodos, adicione exemplos de requisicoes no Postman para facilitar integracao.
 
 ---
 
-## 9. Conclusão
+## 9. Conclusao
 
-Ao iniciar um novo serviço baseado neste template:
-1. **Replique a estrutura de módulos** dentro de `src/modules`.
-2. **Configure o `.env`** com as chaves existentes (e novas, se necessário).
-3. **Implemente DTOs e Guards** seguindo o padrão atual.
-4. **Atualize documentação e Postman** para manter o time sincronizado.
+Ao iniciar um novo servico baseado neste template:
+1. **Replique a estrutura de modulos** dentro de `src/modules`.
+2. **Configure o `.env`** com as chaves existentes (e novas, se necessario).
+3. **Implemente DTOs e Guards** seguindo o padrao atual.
+4. **Atualize documentacao e Postman** para manter o time sincronizado. Sempre que modificar a colecao no Postman, exporte e substitua o `postmen.json` deste repositorio e tambem o arquivo localizado em `E:\Projetos\corteai-codex\postmen.json`.
 
-Esse guia serve como checklist rápido para que um novo agente seja consistente com o projeto CorteAI atual. Ajuste-o conforme evoluções futuras na arquitetura.
+Esse guia serve como checklist rapido para que um novo agente seja consistente com o projeto CorteAI atual. Ajuste-o conforme evolucoes futuras na arquitetura.

@@ -30,6 +30,7 @@ import { ClienteEntity } from '../clientes/clientes.entity';
 import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
 import { DEFAULT_AGENT_NAME, DEFAULT_AGENT_PROMPT } from './ai-agent.constants';
+import { ConsultarBarbeariaWebhookDto } from './dto/consultar-barbearia-webhook.dto';
 
 @Injectable()
 export class AiAgentService {
@@ -155,6 +156,22 @@ export class AiAgentService {
 
   async resetarConfiguracaoAgente(barbeariaId: string): Promise<ConfiguracaoAgenteDto> {
     return this.salvarConfiguracaoAgente(barbeariaId, this.obterConfiguracaoPadraoValores());
+  }
+
+  async consultarBarbeariaViaWebhook(dto: ConsultarBarbeariaWebhookDto) {
+    this.validarToken(dto.token);
+
+    const barbearia = await this.barbeariaRepo.findOne({ where: { id: dto.barbeariaId } });
+    if (!barbearia) {
+      throw new BadRequestException('Barbearia nao encontrada.');
+    }
+
+    const configuracao = await this.obterConfiguracaoAgente(barbearia.id);
+
+    return {
+      barbearia: this.mapearBarbeariaParaWebhook(barbearia),
+      configuracaoAgente: configuracao,
+    };
   }
 
   async atualizarStatusEvolutionViaToken(
@@ -430,6 +447,16 @@ export class AiAgentService {
   ) {
     config.nomeAgente = valores.nomeAgente;
     config.promptSistema = valores.promptSistema;
+  }
+
+  private mapearBarbeariaParaWebhook(barbearia: BarbeariaEntity) {
+    return {
+      id: barbearia.id,
+      nome: barbearia.nome,
+      telefone: barbearia.telefone ?? null,
+      link: barbearia.link,
+      statusAberto: barbearia.statusAberto,
+    };
   }
 
   private mapearConfiguracao(config: ConfiguracaoAgenteEntity): ConfiguracaoAgenteDto {

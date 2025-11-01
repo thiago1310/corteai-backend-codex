@@ -288,11 +288,11 @@
 						}
 					]
 				},
-				{
-					"name": "configuracao",
-					"item": [
-						{
-							"name": "Obter Configuracao do Agente",
+        {
+          "name": "configuracao",
+          "item": [
+            {
+              "name": "Obter Configuracao do Agente",
 							"request": {
 								"method": "GET",
 								"header": [
@@ -313,12 +313,12 @@
 									]
 								}
 							},
-							"response": []
-						},
-						{
-							"name": "Salvar Configuracao do Agente",
-							"request": {
-								"method": "PUT",
+              "response": []
+            },
+            {
+              "name": "Salvar Configuracao do Agente",
+              "request": {
+                "method": "PUT",
 								"header": [
 									{
 										"key": "Content-Type",
@@ -343,12 +343,66 @@
 										"ia",
 										"configuracao"
 									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Resetar Configuracao do Agente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwtToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/ia/configuracao/reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ia",
+                    "configuracao",
+                    "reset"
+                  ]
+                },
+                "description": "Restaura a configuração do agente para os valores padrão."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Consultar Barbearia via Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{clientesWebhookToken}}\",\n  \"barbeariaId\": \"{{barbeariaId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ia/barbearia-webhook",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "barbearia-webhook"
+              ]
+            },
+            "description": "Consulta dados públicos da barbearia para integrações externas usando o token do webhook."
+          },
+          "response": []
+        },
 				{
 					"name": "evolution",
 					"item": [
