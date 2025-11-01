@@ -100,6 +100,13 @@ export class AiAgentController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('configuracao/reset')
+  async resetarConfiguracao(@Req() req) {
+    const barbeariaId = this.barbeariaIdOuErro(req);
+    return this.aiAgentService.resetarConfiguracaoAgente(barbeariaId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('historico')
   async listarHistorico(@Req() req, @Query('limite') limite = 20) {
     const barbeariaId = this.barbeariaIdOuErro(req);

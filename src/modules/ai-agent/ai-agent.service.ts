@@ -29,6 +29,7 @@ import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
 import { ClienteEntity } from '../clientes/clientes.entity';
 import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
 import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
+import { DEFAULT_AGENT_NAME, DEFAULT_AGENT_PROMPT } from './ai-agent.constants';
 
 @Injectable()
 export class AiAgentService {
@@ -125,9 +126,15 @@ export class AiAgentService {
     return this.baseConhecimento.remover(id, barbeariaId);
   }
 
-  async obterConfiguracaoAgente(barbeariaId: string): Promise<ConfiguracaoAgenteDto | null> {
-    const configuracao = await this.configuracaoRepo.findOne({ where: { barbeariaId } });
-    return configuracao ? this.mapearConfiguracao(configuracao) : null;
+  async obterConfiguracaoAgente(barbeariaId: string): Promise<ConfiguracaoAgenteDto> {
+    let configuracao = await this.configuracaoRepo.findOne({ where: { barbeariaId } });
+    if (!configuracao) {
+      configuracao = this.configuracaoRepo.create({ barbeariaId });
+      this.aplicarValoresConfiguracao(configuracao, this.obterConfiguracaoPadraoValores());
+      configuracao = await this.configuracaoRepo.save(configuracao);
+    }
+
+    return this.mapearConfiguracao(configuracao);
   }
 
   async salvarConfiguracaoAgente(
@@ -137,18 +144,17 @@ export class AiAgentService {
     let configuracao = await this.configuracaoRepo.findOne({ where: { barbeariaId } });
 
     if (!configuracao) {
-      configuracao = this.configuracaoRepo.create({
-        barbeariaId,
-        nomeAgente: dto.nomeAgente,
-        promptSistema: dto.promptSistema,
-      });
-    } else {
-      configuracao.nomeAgente = dto.nomeAgente;
-      configuracao.promptSistema = dto.promptSistema;
+      configuracao = this.configuracaoRepo.create({ barbeariaId });
     }
+
+    this.aplicarValoresConfiguracao(configuracao, dto);
 
     const salvo = await this.configuracaoRepo.save(configuracao);
     return this.mapearConfiguracao(salvo);
+  }
+
+  async resetarConfiguracaoAgente(barbeariaId: string): Promise<ConfiguracaoAgenteDto> {
+    return this.salvarConfiguracaoAgente(barbeariaId, this.obterConfiguracaoPadraoValores());
   }
 
   async atualizarStatusEvolutionViaToken(
@@ -406,6 +412,24 @@ export class AiAgentService {
     }
     const normalizado = status.toString().toLowerCase();
     return normalizado === 'connected' || normalizado === 'open';
+  }
+
+  private obterConfiguracaoPadraoValores(): Pick<
+    ConfiguracaoAgenteEntity,
+    'nomeAgente' | 'promptSistema'
+  > {
+    return {
+      nomeAgente: DEFAULT_AGENT_NAME,
+      promptSistema: DEFAULT_AGENT_PROMPT,
+    };
+  }
+
+  private aplicarValoresConfiguracao(
+    config: ConfiguracaoAgenteEntity,
+    valores: Pick<ConfiguracaoAgenteEntity, 'nomeAgente' | 'promptSistema'>,
+  ) {
+    config.nomeAgente = valores.nomeAgente;
+    config.promptSistema = valores.promptSistema;
   }
 
   private mapearConfiguracao(config: ConfiguracaoAgenteEntity): ConfiguracaoAgenteDto {
