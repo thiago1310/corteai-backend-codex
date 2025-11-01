@@ -195,11 +195,10 @@ export class AiAgentService {
     }
 
     const barbeariaId = conexao.barbeariaId;
-
+    const placeholder = this.extrairPlaceholder(dto);
 
     const evento = dto.body?.event ?? dto.message?.event ?? null;
     const eventoLower = evento?.toLowerCase() ?? '';
-
 
     let statusConexao = conexao.status ?? null;
 
@@ -224,7 +223,6 @@ export class AiAgentService {
     }
 
     const telefone = await this.resolverTelefoneCliente(barbeariaId, dto);
-
     if (!telefone) {
       return {
         ignorado: true,
@@ -233,6 +231,8 @@ export class AiAgentService {
         barbeariaId,
       };
     }
+
+    await this.registrarPlaceholderTelefone(barbeariaId, placeholder, telefone);
 
     const cliente = await this.sincronizarClienteEvolution(barbeariaId, telefone, dto);
 
@@ -593,34 +593,35 @@ export class AiAgentService {
   private async resolverTelefoneCliente(barbeariaId: string, dto: EvolutionWebhookDto) {
     const data = dto.body?.data ?? {};
     const key = (data as Record<string, unknown>)?.key as Record<string, unknown> | undefined;
+    const remoteJid = key?.remoteJid;
 
-    const candidatos: Array<unknown> = [
-      key?.remoteJid,
-      dto.body?.sender,
-      key?.participant,
-      (data as Record<string, unknown>)?.telefone,
-      (data as Record<string, unknown>)?.Telefone,
-    ];
-
-    if (key?.remoteJid) {
-      const telefonePrimario = this.extrairTelefoneDeValor(key.remoteJid);
+    if (remoteJid) {
+      const telefonePrimario = this.extrairTelefoneDeValor(remoteJid);
       if (telefonePrimario && !this.ehTelefonePlaceholder(telefonePrimario)) {
         return this.normalizarTelefoneCliente(telefonePrimario);
       }
     }
 
-    if (key?.participant) {
-      const telefoneParticipant = this.extrairTelefoneDeValor(key.participant);
-      if (telefoneParticipant && !this.ehTelefonePlaceholder(telefoneParticipant)) {
-        return this.normalizarTelefoneCliente(telefoneParticipant);
+    const placeholder = this.extrairPlaceholder(dto);
+    if (placeholder) {
+      const telefoneMapeado = await this.buscarTelefonePorPlaceholder(barbeariaId, placeholder);
+      if (telefoneMapeado) {
+        return this.normalizarTelefoneCliente(telefoneMapeado);
       }
     }
 
-    const stanzaId = this.extrairStanzaId(dto);
-    if (stanzaId) {
-      const telefoneStanza = await this.buscarTelefonePorStanza(barbeariaId, stanzaId);
-      if (telefoneStanza) {
-        return this.normalizarTelefoneCliente(telefoneStanza);
+    const candidatos: Array<unknown> = [
+      key?.participant,
+      (data as Record<string, unknown>)?.telefone,
+      (data as Record<string, unknown>)?.Telefone,
+      dto.message?.chat_id,
+      dto.message?.chatId,
+    ];
+
+    for (const candidato of candidatos) {
+      const telefone = this.extrairTelefoneDeValor(candidato);
+      if (telefone && !this.ehTelefonePlaceholder(telefone)) {
+        return this.normalizarTelefoneCliente(telefone);
       }
     }
 
@@ -630,9 +631,13 @@ export class AiAgentService {
       if (telefoneSalvo && !this.ehTelefonePlaceholder(telefoneSalvo)) {
         return this.normalizarTelefoneCliente(telefoneSalvo);
       }
-      const telefoneMapeado = await this.buscarTelefonePorStanza(barbeariaId, messageId);
-      if (telefoneMapeado) {
-        return this.normalizarTelefoneCliente(telefoneMapeado);
+    }
+
+    const stanzaId = this.extrairStanzaId(dto);
+    if (stanzaId) {
+      const telefoneStanza = await this.buscarTelefoneViaMessageId(barbeariaId, stanzaId);
+      if (telefoneStanza && !this.ehTelefonePlaceholder(telefoneStanza)) {
+        return this.normalizarTelefoneCliente(telefoneStanza);
       }
     }
 
@@ -686,6 +691,26 @@ export class AiAgentService {
     return null;
   }
 
+  private extrairPlaceholder(dto: EvolutionWebhookDto) {
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const key =
+      (dto.body?.key as Record<string, unknown> | undefined) ??
+      ((data?.key as Record<string, unknown>) || undefined);
+
+    const candidatos = [key?.remoteJid, key?.participant];
+
+    for (const valor of candidatos) {
+      if (typeof valor === 'string' && this.ehTelefonePlaceholder(valor)) {
+        const texto = valor.trim();
+        if (texto.length) {
+          return texto;
+        }
+      }
+    }
+
+    return null;
+  }
+
   private extrairStanzaId(dto: EvolutionWebhookDto) {
     const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
     const mensagem = (data?.message as Record<string, unknown> | undefined) ?? undefined;
@@ -713,18 +738,45 @@ export class AiAgentService {
     return null;
   }
 
-  private async buscarTelefonePorStanza(barbeariaId: string, stanzaId?: string | null) {
-    if (!stanzaId) {
-      return null;
-    }
-    const id = stanzaId.toString().trim();
-    if (!id) {
+  private async buscarTelefonePorPlaceholder(barbeariaId: string, placeholder: string) {
+    const chave = placeholder.trim();
+    if (!chave) {
       return null;
     }
     const mapping = await this.whatsappMappingRepo.findOne({
-      where: { barbeariaId, stanzaId: id },
+      where: { barbeariaId, placeholder: chave },
     });
     return mapping?.telefone ?? null;
+  }
+
+  private async registrarPlaceholderTelefone(
+    barbeariaId: string,
+    placeholder: string | null,
+    telefone: string,
+  ) {
+    if (!placeholder) {
+      return;
+    }
+    const chave = placeholder.trim();
+    if (!chave) {
+      return;
+    }
+    const telefoneNormalizado = this.normalizarTelefoneCliente(telefone);
+    let mapping = await this.whatsappMappingRepo.findOne({
+      where: { barbeariaId, placeholder: chave },
+    });
+
+    if (!mapping) {
+      mapping = this.whatsappMappingRepo.create({
+        barbeariaId,
+        placeholder: chave,
+        telefone: telefoneNormalizado,
+      });
+    } else {
+      mapping.telefone = telefoneNormalizado;
+    }
+
+    await this.whatsappMappingRepo.save(mapping);
   }
 
   private async sincronizarClienteEvolution(
@@ -953,34 +1005,11 @@ export class AiAgentService {
     telefone: string,
     messageId?: string | null,
   ) {
-    if (!messageId) {
-      return;
-    }
-    const id = messageId.toString().trim();
-    if (!id) {
-      return;
-    }
-
-    const telefoneNormalizado = this.normalizarTelefoneCliente(telefone);
-    let mapping = await this.whatsappMappingRepo.findOne({
-      where: { barbeariaId, stanzaId: id },
-    });
-
-    if (!mapping) {
-      mapping = this.whatsappMappingRepo.create({
-        barbeariaId,
-        stanzaId: id,
-        messageId: id,
-        telefone: telefoneNormalizado,
-      });
-    } else {
-      mapping.telefone = telefoneNormalizado;
-      if (!mapping.messageId) {
-        mapping.messageId = id;
-      }
-    }
-
-    await this.whatsappMappingRepo.save(mapping);
+    // Mantido por compatibilidade: o historico de mensagens já persiste o messageId associado ao telefone.
+    // Nenhuma ação adicional é necessária aqui após a simplificação do mapeamento por placeholder.
+    void barbeariaId;
+    void telefone;
+    void messageId;
   }
 
   private normalizarTelefoneCliente(telefone: string) {

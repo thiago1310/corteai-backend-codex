@@ -352,7 +352,7 @@ describe('AiAgentService - evolution webhook', () => {
     expect(clienteRepo.save).toHaveBeenCalled();
     expect(historicoRepo.save).toHaveBeenCalled();
     expect(chatStatusRepo.save).toHaveBeenCalled();
-    expect(whatsappMappingRepo.save).toHaveBeenCalled();
+    expect(whatsappMappingRepo.save).not.toHaveBeenCalled();
     expect(resultado.cliente?.id).toBe('cliente-1');
     expect(resultado.mensagem?.conteudo).toBe('Funciona ?');
     expect(resultado.direcao).toBe('entrando');
@@ -431,51 +431,53 @@ describe('AiAgentService - evolution webhook', () => {
       status: 'connected',
     } as ConexaoEvolutionEntity;
 
-    const mapa = new Map<string, { telefone: string }>([
-      ['msg-original', { telefone: '+55 11 98888-2222' }],
-    ]);
-
     const { service, conexaoRepo, clienteRepo, historicoRepo, chatStatusRepo, whatsappMappingRepo } =
       createService({
         conexaoRepo: {
           findOne: jest.fn().mockResolvedValueOnce(conexao),
         },
-      whatsappMappingRepo: {
-        findOne: jest.fn().mockImplementation(async ({ where }) => mapa.get(where.stanzaId) ?? null),
-        create: jest.fn().mockImplementation((dados) => dados),
-        save: jest.fn().mockImplementation(async (entity) => entity),
-      },
-      clienteRepo: {
-        findOne: jest.fn().mockResolvedValueOnce(null),
-        create: jest.fn().mockImplementation((dados) => dados),
-        save: jest.fn().mockImplementation(async (entity) => ({
-          ...entity,
-          id: 'cliente-3',
-        })),
-      },
-      historicoRepo: {
-        findOne: jest.fn().mockResolvedValueOnce(null),
-        create: jest.fn().mockImplementation((dados) => dados),
-        save: jest.fn().mockImplementation(async (entity) => ({
-          ...entity,
-          id: 'hist-3',
-          createdAt: new Date('2024-01-02T10:00:00Z'),
-        })),
-        find: jest.fn().mockResolvedValue([]),
-      },
-      chatStatusRepo: {
-        findOne: jest.fn().mockResolvedValueOnce(null),
-        create: jest.fn().mockImplementation((dados) => dados),
-        save: jest.fn().mockImplementation(async (entity) => entity),
-      },
-    });
+        whatsappMappingRepo: {
+          findOne: jest.fn().mockResolvedValueOnce(null),
+          create: jest.fn().mockImplementation((dados) => dados),
+          save: jest.fn().mockImplementation(async (entity) => entity),
+        },
+        clienteRepo: {
+          findOne: jest.fn().mockResolvedValueOnce(null),
+          create: jest.fn().mockImplementation((dados) => dados),
+          save: jest.fn().mockImplementation(async (entity) => ({
+            ...entity,
+            id: 'cliente-3',
+          })),
+        },
+        historicoRepo: {
+          findOne: jest
+            .fn()
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce({
+              barbeariaId,
+              messageId: 'msg-original',
+              telefoneCliente: '5511988882222',
+            }),
+          create: jest.fn().mockImplementation((dados) => dados),
+          save: jest.fn().mockImplementation(async (entity) => ({
+            ...entity,
+            id: 'hist-3',
+            createdAt: new Date('2024-01-02T10:00:00Z'),
+          })),
+          find: jest.fn().mockResolvedValue([]),
+        },
+        chatStatusRepo: {
+          findOne: jest.fn().mockResolvedValueOnce(null),
+          create: jest.fn().mockImplementation((dados) => dados),
+          save: jest.fn().mockImplementation(async (entity) => entity),
+        },
+      });
 
     const dto: EvolutionWebhookDto = {
       token: 'cliente-token',
       body: {
         event: 'messages.upsert',
         instance: 'INST003',
-        sender: '18915086323963@lid',
         data: {
           key: {
             remoteJid: '18915086323963@lid',
