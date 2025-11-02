@@ -485,6 +485,7 @@ describe('AiAgentService - evolution webhook', () => {
             id: 'msg-nova',
           },
           message: {
+            conversation: 'Resposta com quote',
             extendedTextMessage: {
               contextInfo: {
                 stanzaId: 'msg-original',
@@ -506,6 +507,136 @@ describe('AiAgentService - evolution webhook', () => {
     expect(whatsappMappingRepo.save).toHaveBeenCalled();
     expect(resultado.ignorado).toBeUndefined();
     expect(resultado.mensagem?.direcao).toBe('entrando');
+  });
+
+  it('substitui conteudo vazio por [audio] quando payload traz audio', async () => {
+    const barbeariaId = 'barb-5';
+    const conexao: ConexaoEvolutionEntity = {
+      id: 'cx-5',
+      barbeariaId,
+      instanceName: 'INST005',
+      status: 'connected',
+    } as ConexaoEvolutionEntity;
+
+    const { service, conexaoRepo, clienteRepo, historicoRepo } = createService({
+      conexaoRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(conexao),
+      },
+      clienteRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => ({
+          ...entity,
+          id: 'cliente-5',
+        })),
+      },
+      historicoRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => ({
+          ...entity,
+          id: 'hist-5',
+          content: entity.content,
+          createdAt: new Date('2024-03-03T10:00:00Z'),
+        })),
+        find: jest.fn().mockResolvedValue([]),
+      },
+      chatStatusRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => entity),
+      },
+    });
+
+    const dto: EvolutionWebhookDto = {
+      token: 'cliente-token',
+      body: {
+        event: 'messages.upsert',
+        instance: 'INST005',
+        data: {
+          key: {
+            remoteJid: '5511999999999@s.whatsapp.net',
+            fromMe: false,
+            id: 'msg-audio',
+          },
+          message: {
+            audioMessage: {
+              mimetype: 'audio/ogg; codecs=opus',
+            },
+          },
+        },
+      },
+    };
+
+    const resultado = await service.processarEvolutionWebhook(dto);
+
+    expect(conexaoRepo.findOne).toHaveBeenCalled();
+    expect(resultado.mensagem?.conteudo).toBe('[audio]');
+  });
+
+  it('substitui conteudo vazio por [imagem] quando payload traz imagem', async () => {
+    const barbeariaId = 'barb-6';
+    const conexao: ConexaoEvolutionEntity = {
+      id: 'cx-6',
+      barbeariaId,
+      instanceName: 'INST006',
+      status: 'connected',
+    } as ConexaoEvolutionEntity;
+
+    const { service, conexaoRepo, clienteRepo, historicoRepo } = createService({
+      conexaoRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(conexao),
+      },
+      clienteRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => ({
+          ...entity,
+          id: 'cliente-6',
+        })),
+      },
+      historicoRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => ({
+          ...entity,
+          id: 'hist-6',
+          content: entity.content,
+          createdAt: new Date('2024-03-04T10:00:00Z'),
+        })),
+        find: jest.fn().mockResolvedValue([]),
+      },
+      chatStatusRepo: {
+        findOne: jest.fn().mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((dados) => dados),
+        save: jest.fn().mockImplementation(async (entity) => entity),
+      },
+    });
+
+    const dto: EvolutionWebhookDto = {
+      token: 'cliente-token',
+      body: {
+        event: 'messages.upsert',
+        instance: 'INST006',
+        data: {
+          key: {
+            remoteJid: '5511888888888@s.whatsapp.net',
+            fromMe: false,
+            id: 'msg-imagem',
+          },
+          message: {
+            imageMessage: {
+              mimetype: 'image/jpeg',
+            },
+          },
+        },
+      },
+    };
+
+    const resultado = await service.processarEvolutionWebhook(dto);
+
+    expect(conexaoRepo.findOne).toHaveBeenCalled();
+    expect(resultado.mensagem?.conteudo).toBe('[imagem]');
   });
 
   it('ignores mensagens sem telefone resolvido nem referencia', async () => {

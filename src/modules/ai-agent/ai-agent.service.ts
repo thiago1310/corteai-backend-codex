@@ -261,6 +261,7 @@ export class AiAgentService {
       }));
 
     const chatStatusRegistro = await this.atualizarStatusConversa(cliente.id, mensagemProcessada);
+    const agentConfig = await this.configuracaoRepo.findOne({ where: { barbeariaId: barbeariaId } })
 
     return {
       evento,
@@ -275,6 +276,7 @@ export class AiAgentService {
       statusConexao,
       chatStatus: chatStatusRegistro?.status ?? 1,
       historico,
+      agent: agentConfig
     };
   }
 
@@ -408,7 +410,7 @@ export class AiAgentService {
         item.instanceName.replace(/-/g, '').toLowerCase() === instanceName.replace(/-/g, '').toLowerCase(),
     );
 
-;
+    ;
     if (!detalhe) {
       return null;
     }
@@ -814,11 +816,15 @@ export class AiAgentService {
       (typeof dto.message?.content === 'string' && dto.message.content.length > 0) ||
       typeof this.extrairConteudoMensagem(dto) === 'string';
 
-    if (!evento.toLowerCase().includes('message') && !possuiConteudo) {
-      return null;
-    }
+    let conteudo = this.extrairConteudoMensagem(dto) ?? '';
 
-    const conteudo = this.extrairConteudoMensagem(dto) ?? '';
+    if (!conteudo.trim()) {
+      const tipoMidia = this.identificarTipoMidia(dto);
+      if (!tipoMidia) {
+        return null;
+      }
+      conteudo = tipoMidia;
+    }
     const messageId = this.extrairMessageId(dto);
     const fromMe = this.mensagemPartiuDaBarbearia(dto);
     const direcao = fromMe ? 'saindo' : 'entrando';
@@ -901,6 +907,29 @@ export class AiAgentService {
       if (typeof valor === 'string' && valor.trim().length) {
         return valor;
       }
+    }
+
+    return null;
+  }
+
+  private identificarTipoMidia(dto: EvolutionWebhookDto): '[audio]' | '[imagem]' | null {
+    const data = (dto.body?.data as Record<string, unknown> | undefined) ?? undefined;
+    const mensagem = (data?.message as Record<string, unknown> | undefined) ?? undefined;
+    if (!mensagem) {
+      return null;
+    }
+
+    if (mensagem.audioMessage || mensagem['audioMessage']) {
+      return '[audio]';
+    }
+
+    if (
+      mensagem.imageMessage ||
+      mensagem['imageMessage'] ||
+      mensagem.documentMessage ||
+      mensagem['documentMessage']
+    ) {
+      return '[imagem]';
     }
 
     return null;
