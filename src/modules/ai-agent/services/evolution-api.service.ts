@@ -80,10 +80,8 @@ export class EvolutionApiService {
           webhook_base64: true,
           webhook_by_events: false,
           events: [
-            'MESSAGES_SET',
             'MESSAGES_UPSERT',
-            'SEND_MESSAGE',
-            'CONNECTION_UPDATE',
+            'CONNECTION_UPDATE'
           ],
           reject_call: false,
           msg_reject_call: '',
