@@ -261,7 +261,31 @@ export class AiAgentService {
       }));
 
     const chatStatusRegistro = await this.atualizarStatusConversa(cliente.id, mensagemProcessada);
+    let chatStatusValor = chatStatusRegistro?.status;
+
+    if (chatStatusValor === undefined) {
+      const existente = await this.chatStatusRepo.findOne({
+        where: { clienteId: cliente.id },
+      });
+      chatStatusValor = existente?.status ?? 1;
+    }
     const agentConfig = await this.configuracaoRepo.findOne({ where: { barbeariaId: barbeariaId } })
+
+    console.log({
+      evento,
+      direcao: mensagemProcessada?.direcao ?? null,
+      barbeariaId,
+      cliente: {
+        id: cliente.id,
+        nome: cliente.nome,
+        telefone: cliente.telefone,
+      },
+      mensagem: mensagemProcessada,
+      statusConexao,
+      chatStatus: chatStatusValor,
+      historico,
+      agent: agentConfig
+    })
 
     return {
       evento,
@@ -274,7 +298,7 @@ export class AiAgentService {
       },
       mensagem: mensagemProcessada,
       statusConexao,
-      chatStatus: chatStatusRegistro?.status ?? 1,
+      chatStatus: chatStatusValor,
       historico,
       agent: agentConfig
     };
@@ -1002,6 +1026,8 @@ export class AiAgentService {
       where: { clienteId },
     });
 
+
+
     if (!status) {
       status = this.chatStatusRepo.create({
         clienteId,
@@ -1009,11 +1035,11 @@ export class AiAgentService {
         metadados: null,
       });
     }
-
-    if (mensagem?.direcao === 'entrando') {
-      status.status = 1;
-    }
-
+    /*
+        if (mensagem?.direcao === 'entrando') {
+          status.status = 1;
+        }
+    */
     const metadadosAtual =
       (status.metadados as Record<string, unknown> | null) ?? {};
     const ultimaDirecaoAnterior =
@@ -1025,6 +1051,8 @@ export class AiAgentService {
       ...metadadosAtual,
       ultimaDirecao: mensagem?.direcao ?? ultimaDirecaoAnterior,
     };
+
+
 
     return this.chatStatusRepo.save(status);
   }

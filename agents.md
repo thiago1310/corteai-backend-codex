@@ -1,13 +1,7 @@
-﻿# CorteAI Backend – Project Blueprint for New Agents
-
-Este documento resume os principais componentes de infraestrutura e organizacao utilizados no projeto **corteai-backend-codex**. Utilize-o como referencia ao criar um novo servico "agente" que deva seguir a mesma estrutura de pastas, configuracao e padroes.
-
----
-
+﻿
 ## 1. Visao Geral
 
 - **Framework**: NestJS + TypeORM.
-- **Banco de dados**: PostgreSQL (schema padrao definido por `DEFAULT_SCHEMA` / `public`).
 - **Ambientacao**: Configuracoes via `.env` e `ConfigModule` global.
 - **Estrutura modular**: Cada dominio possui modulo proprio em `src/modules/<dominio>`.
 - **Autenticacao**: JWT (`AuthModule`), com `JwtAuthGuard` aplicado aos endpoints que requerem login.
@@ -24,13 +18,8 @@ Este documento resume os principais componentes de infraestrutura e organizacao 
 │   ├── app.module.ts         # Registro global dos modulos.
 │   ├── main.ts               # Bootstrap NestJS.
 │   └── modules
-│       ├── ai-agent
-│       ├── agendamentos
 │       ├── auth
-│       ├── barbearias
-│       ├── clientes
 │       ├── config            # `database.config.ts`, naming strategy.
-│       ├── profissionais
 │       └── ...
 ├── postmen.json              # Colecao Postman com exemplos de requisicoes.
 ├── package.json
@@ -61,24 +50,10 @@ Exemplo de variaveis necessarias:
 ```
 JWT_SECRET=...
 PORT=6363
-DB_HOST=...
-DB_PORT=5432
-DB_USER=...
-DB_PASS=...
-DB_NAME=...
-DB_TYPE=postgres
 OPENAI_API_KEY=...
 EVOLUTION_API_URL=http://100.80.45.92:2121
 EVOLUTION_API_KEY=...
-CLIENTES_WEBHOOK_TOKEN=...
-token_thiago=thiagojw
 ```
-
-> **Observacoes**:
-> - `CLIENTES_WEBHOOK_TOKEN` autentica os webhooks externos (RAG, sincronizacao Evolution, chat status).
-> - Use a mesma convencao de *snake_case* para novas chaves.
-
----
 
 ## 4. Banco e Mapeamentos
 
@@ -117,14 +92,6 @@ export class ChatStatusEntity {
 - Aplicado com `@UseGuards(JwtAuthGuard)` em rotas `POST/GET/PATCH` internas.
 - Payload do JWT (vide `JwtStrategy`): `{ sub, email, scope }`.
 
-### 5.2 Token Webhook (`CLIENTES_WEBHOOK_TOKEN`)
-- Endpoints publicos do modulo **AI Agent** exigem o token no body/query, sem JWT:
-  - `POST /ia/perguntar`
-  - `POST /ia/chat-externo`
-  - `POST /ia/chat-status`
-  - `GET /ia/chat-status`
-  - `POST /clientes/evolution/sincronizar`
-- Validacao centralizada em `AiAgentService.validarToken`.
 
 ### 5.3 Estrutura de DTOs
 Utilize `class-validator` e `class-transformer`:
@@ -149,17 +116,6 @@ export class UpsertChatStatusDto {
 
 ---
 
-## 6. Interacoes Principais
-
-| Area                 | Descricao                                                                                 |
-|----------------------|-------------------------------------------------------------------------------------------|
-| AI / RAG             | `AiAgentService.perguntar` consulta RAG (`RagService`), registra historico e sincroniza cliente. |
-| Evolution            | Endpoints `/ia/evolution/*` gerenciam sessoes via `EvolutionApiService`.                   |
-| Clientes             | Modulo `clientes` cria/atualiza registros vinculados a barbearias, integrando com Evolution. |
-| Historico Externo    | `POST /ia/chat-externo` registra conversas de fontes externas e, quando `role=assistant`, persiste pair `chat_messages`. |
-| Status do Chat       | `chat_status` mantem status por cliente (via token).                                       |
-
----
 
 ## 7. Scripts e Execucao
 
@@ -193,7 +149,7 @@ Ao iniciar um novo servico baseado neste template:
 1. **Replique a estrutura de modulos** dentro de `src/modules`.
 2. **Configure o `.env`** com as chaves existentes (e novas, se necessario).
 3. **Implemente DTOs e Guards** seguindo o padrao atual.
-4. **Atualize documentacao e Postman** para manter o time sincronizado. Sempre que modificar a colecao no Postman, exporte e substitua o `postmen.json` deste repositorio e tambem o arquivo localizado em `E:\Projetos\corteai-codex\postmen.json`.
+4. **Atualize documentacao e Postman**
 5. **Antes de implementar qualquer mudanca solicitada em codigo**, elabore um plano de execucao, apresente-o e confirme com o solicitante se deve prosseguir com o plano.
 
 Esse guia serve como checklist rapido para que um novo agente seja consistente com o projeto CorteAI atual. Ajuste-o conforme evolucoes futuras na arquitetura.
