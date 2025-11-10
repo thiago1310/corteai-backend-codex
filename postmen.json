@@ -167,6 +167,158 @@
 			]
 		},
 		{
+			"name": "servicos",
+			"item": [
+				{
+					"name": "Listar Serviços",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/servicos?barbeariaId={{barbeariaId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"servicos"
+							],
+							"query": [
+								{
+									"key": "barbeariaId",
+									"value": "{{barbeariaId}}"
+								}
+							]
+						},
+						"description": "Retorna todos os serviços públicos da barbearia informada."
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Serviços (Filtro)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/servicos/busca?barbeariaId={{barbeariaId}}&nome=corte&descricao=degrade",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"servicos",
+								"busca"
+							],
+							"query": [
+								{
+									"key": "barbeariaId",
+									"value": "{{barbeariaId}}"
+								},
+								{
+									"key": "nome",
+									"value": "corte"
+								},
+								{
+									"key": "descricao",
+									"value": "degrade"
+								}
+							]
+						},
+						"description": "Busca serviços da barbearia pelo nome e/ou descrição (todos parâmetros opcionais, exceto barbeariaId)."
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Serviço",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Corte Degrade\",\n  \"descricao\": \"Corte moderno com finalização na navalha\",\n  \"valor\": 59.9,\n  \"tempoEstimado\": 45\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/servicos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"servicos"
+							]
+						},
+						"description": "Cria um novo serviço (necessário token de barbearia)."
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Serviço",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Corte Degrade Premium\",\n  \"valor\": 69.9\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/servicos/{{servicoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"servicos",
+								"{{servicoId}}"
+							]
+						},
+						"description": "Atualiza campos do serviço pertencente à barbearia autenticada."
+					},
+					"response": []
+				},
+				{
+					"name": "Remover Serviço",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/servicos/{{servicoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"servicos",
+								"{{servicoId}}"
+							]
+						},
+						"description": "Remove o serviço informado (requer token de barbearia)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "ai-agent",
 			"item": [
 				{
@@ -1118,6 +1270,11 @@
 		},
 		{
 			"key": "clientesWebhookToken",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "servicoId",
 			"value": "",
 			"type": "default"
 		}

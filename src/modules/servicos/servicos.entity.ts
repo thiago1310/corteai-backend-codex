@@ -23,6 +23,9 @@ export class Servico {
   @Column({ length: 150 })
   nome!: string;
 
+  @Column({ type: 'text', nullable: true })
+  descricao?: string | null;
+
   @Column({ type: 'numeric', precision: 12, scale: 2, transformer: DecimalTransformer })
   valor!: number;
 
