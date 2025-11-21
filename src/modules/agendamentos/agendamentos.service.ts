@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
+import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
+
 import { Agendamento, AgendamentoStatus } from './agendamentos.entity';
 import { AgendamentoServico } from './agendamento-servicos.entity';
-import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 import { Profissional } from '../profissionais/profissionais.entity';
 import { Usuario } from '../usuarios/usuarios.entity';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
@@ -51,9 +52,11 @@ export class AgendamentosService {
       for (const servicoId of data.servicosIds) {
         const servico = await this.em.findOneBy(Servico, { id: servicoId });
         if (!servico) {
-          throw new NotFoundException(`Serviço ${servicoId} não encontrado`);
+          throw new NotFoundException(`Servico ${servicoId} nao encontrado`);
         }
-        await this.itemRepo.save(this.itemRepo.create({ agendamento: saved, servico }));
+        await this.itemRepo.save(
+          this.itemRepo.create({ agendamento: saved, servico, valor: servico.valor }),
+        );
       }
     }
 
@@ -70,4 +73,3 @@ export class AgendamentosService {
     });
   }
 }
-

@@ -319,6 +319,146 @@
 			]
 		},
 		{
+			"name": "profissionais",
+			"item": [
+				{
+					"name": "Listar Profissionais",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/profissionais",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profissionais"
+							]
+						},
+						"description": "Retorna todos os profissionais cadastrados da barbearia autenticada (inclui horários e serviços)."
+					},
+					"response": []
+				},
+				{
+					"name": "Detalhar Profissional",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/profissionais/{{profissionalId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profissionais",
+								"{{profissionalId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Profissional",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Carlos Silva\",\n  \"email\": \"carlos@corte.ai\",\n  \"telefone\": \"48999999999\",\n  \"comissao\": 60,\n  \"senha\": \"123456\",\n  \"servicosIds\": [\"{{servicoId}}\"],\n  \"horarios\": [\n    {\n      \"diasSemana\": [\"segunda\", \"terca\", \"quarta\", \"quinta\", \"sexta\"],\n      \"abre\": \"09:00\",\n      \"fecha\": \"18:00\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profissionais",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profissionais"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Profissional",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"comissao\": 55,\n  \"horarios\": [\n    {\n      \"diasSemana\": [\"terca\", \"quarta\", \"quinta\"],\n      \"abre\": \"10:00\",\n      \"fecha\": \"19:00\"\n    },\n    {\n      \"diasSemana\": [\"sabado\"],\n      \"abre\": \"09:00\",\n      \"fecha\": \"14:00\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profissionais/{{profissionalId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profissionais",
+								"{{profissionalId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remover Profissional",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/profissionais/{{profissionalId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profissionais",
+								"{{profissionalId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "ai-agent",
 			"item": [
 				{
@@ -1275,6 +1415,11 @@
 		},
 		{
 			"key": "servicoId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "profissionalId",
 			"value": "",
 			"type": "default"
 		}

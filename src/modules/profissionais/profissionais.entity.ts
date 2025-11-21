@@ -10,6 +10,7 @@ import {
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { Servico } from '../servicos/servicos.entity';
 import { Agendamento } from '../agendamentos/agendamentos.entity';
+import { ProfissionalHorario } from './profissional-horario.entity';
 
 @Entity('profissionais')
 export class Profissional {
@@ -40,4 +41,9 @@ export class Profissional {
 
   @OneToMany(() => Agendamento, (a) => a.profissional)
   agendamentos!: Agendamento[];
+
+  @OneToMany(() => ProfissionalHorario, (h) => h.profissional, {
+    cascade: true,
+  })
+  horarios!: ProfissionalHorario[];
 }
