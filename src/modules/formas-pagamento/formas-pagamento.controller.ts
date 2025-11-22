@@ -7,20 +7,17 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ProfissionaisService } from './profissionais.service';
+import { FormasPagamentoService } from './formas-pagamento.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreateProfissionalDto } from './dto/create-profissional.dto';
-import { UpdateProfissionalDto } from './dto/update-profissional.dto';
-import { MetricasProfissionalDto } from './dto/metricas-profissional.dto';
+import { CreateFormaPagamentoDto } from './dto/create-forma-pagamento.dto';
+import { UpdateFormaPagamentoDto } from './dto/update-forma-pagamento.dto';
 
-@Controller('profissionais')
-@UseGuards(JwtAuthGuard)
+@Controller('formas-pagamento')
 @UsePipes(
   new ValidationPipe({
     transform: true,
@@ -28,41 +25,31 @@ import { MetricasProfissionalDto } from './dto/metricas-profissional.dto';
     forbidNonWhitelisted: true,
   }),
 )
-export class ProfissionaisController {
-  constructor(private readonly service: ProfissionaisService) {}
+export class FormasPagamentoController {
+  constructor(private readonly service: FormasPagamentoService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Req() req) {
     const barbeariaId = this.barbeariaIdOuErro(req);
     return this.service.findAll(barbeariaId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string, @Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.service.findOne(id, barbeariaId);
-  }
-
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Req() req, @Body() body: CreateProfissionalDto) {
+  create(@Req() req, @Body() body: CreateFormaPagamentoDto) {
     const barbeariaId = this.barbeariaIdOuErro(req);
     return this.service.create(barbeariaId, body);
   }
 
-  @Get(':id/metricas')
-  metricas(@Param('id') id: string, @Query() query: MetricasProfissionalDto, @Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    const inicio = query.inicio ? new Date(query.inicio) : undefined;
-    const fim = query.fim ? new Date(query.fim) : undefined;
-    return this.service.metricas(id, barbeariaId, inicio, fim);
-  }
-
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Req() req, @Body() body: UpdateProfissionalDto) {
+  update(@Param('id') id: string, @Req() req, @Body() body: UpdateFormaPagamentoDto) {
     const barbeariaId = this.barbeariaIdOuErro(req);
     return this.service.update(id, barbeariaId, body);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req) {
     const barbeariaId = this.barbeariaIdOuErro(req);

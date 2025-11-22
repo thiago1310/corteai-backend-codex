@@ -11,6 +11,8 @@ import { HorarioFuncionamento } from './horario-funcionamento.entity';
 import { Agendamento } from '../agendamentos/agendamentos.entity';
 import { Faq } from '../faq/faq.entity';
 import { Lancamento } from '../lancamentos/lancamentos.entity';
+import { Produto } from '../produtos/produtos.entity';
+import { FormaPagamento } from '../formas-pagamento/formas-pagamento.entity';
 
 @Entity('barbearias')
 export class BarbeariaEntity {
@@ -71,6 +73,12 @@ export class BarbeariaEntity {
 
   @OneToMany(() => Servico, (s) => s.barbearia)
   servicos!: Servico[];
+
+  @OneToMany(() => Produto, (p) => p.barbearia)
+  produtos!: Produto[];
+
+  @OneToMany(() => FormaPagamento, (fp) => fp.barbearia)
+  formasPagamento!: FormaPagamento[];
 
   @OneToMany(() => HorarioFuncionamento, (h) => h.barbearia)
   horarios!: HorarioFuncionamento[];

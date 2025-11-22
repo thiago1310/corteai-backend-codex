@@ -1,0 +1,54 @@
+# Dev OK – Progresso de Implementação
+
+## 2025-12-03
+- Agendamentos:
+  - Novos estados conforme plano: `PENDENTE`, `CONFIRMADO`, `CANCELADO`, `EM_ATENDIMENTO`, `FINALIZADO`.
+  - Validação de DTO com `class-validator` (datas, ids obrigatórios, enum de status e lista de serviços).
+  - Checagem de disponibilidade para evitar duplo agendamento do mesmo profissional (sobreposição de horário).
+  - Validação de pertença do profissional/usuário à barbearia fornecida.
+  - Garantia de `dataFimPrevisto` após `dataInicio`.
+- Comanda/itens de agendamento:
+  - Itens agora suportam tipo `SERVICO` ou `PRODUTO`, quantidade, valor unitário, desconto/taxa com justificativa e comissão por item.
+  - Endpoints: `POST /agendamentos/:id/itens` para incluir itens; `PATCH /agendamentos/:id/itens/:itemId` para atualizar; `POST /agendamentos/:id/itens/:itemId/remove` para remover; `PATCH /agendamentos/:id/status` para transição de status (regras de transição básicas).
+  - Criação de agendamento aceita itens detalhados ou lista de `servicosIds` (compatibilidade).
+- Produtos:
+  - Novo módulo `produtos` (entity/service/controller/module) com CRUD básico, validação e checagem de propriedade por barbearia.
+  - Relação adicionada em `BarbeariaEntity` e import em `AppModule`.
+- Estoque:
+  - Campo `estoqueAtual` em `produtos`.
+  - Entidade de movimentação (`produto_movimentacoes`) e serviço de estoque com validação de saldo por barbearia.
+  - Movimentação automática em comanda: saída ao adicionar item de produto; entrada ao remover ou ao trocar itens (estorno do anterior).
+  - Cancelamento de agendamento devolve estoque dos itens de produto.
+- Formas de pagamento:
+  - Novo módulo `formas-pagamento` (entity/service/controller/module) com CRUD para barbearia e validação de ownership.
+- Pagamentos em agendamentos:
+  - Entidade `agendamento_pagamentos` vinculada a forma de pagamento e valor pago.
+  - Endpoint `POST /agendamentos/:id/pagamentos` para registrar pagamentos e listar após inclusão.
+- Recebimentos:
+  - Entidade `recebimentos` por agendamento, com status `PENDENTE`, `RECEBIDO`, `ESTORNADO`.
+  - Atualização automática ao finalizar agendamento e ao registrar pagamentos (recebido quando soma de pagamentos >= total).
+  - Estorno do recebimento ao cancelar agendamento.
+- Contas a receber:
+  - Entidade `contas_receber` 1:1 com agendamento, status `PENDENTE`, `PAGO`, `ESTORNADO`.
+  - Atualização automática ao finalizar agendamento (valor total da comanda) e ao registrar pagamentos.
+  - Estorno ao cancelar agendamento.
+- Contas a pagar:
+  - Módulo `financeiro` com CRUD básico de `contas_pagar` (status, vencimento, pagamento, categoria, centro de custo), restrito à barbearia.
+- Bloqueios de agenda:
+  - Entidade `bloqueios_agenda` (global ou por profissional), endpoints para listar/criar/remover.
+  - Verificação na criação de agendamento para impedir horário bloqueado.
+- Agenda automática (base):
+  - Serviço `AgendaAutomaticaService` que gera slots para 7 dias à frente com base no horário de funcionamento da barbearia (dia da semana, abre/fecha) para cada profissional, se não houver registros no dia.
+- Fidelidade (cashback/giftcards):
+  - Módulo `fidelidade` com config de cashback por barbearia (percentual, valor mínimo, ativo).
+  - Saldos de cashback por cliente + conversão para giftcards (código único, valor/saldo, expiração, status).
+  - Endpoints para configurar, creditar/debitar cashback e emitir/listar giftcards.
+- Cupons/Promoções:
+  - Módulo `cupons` com CRUD (código, percentual/valor, expiração, limites de uso por cliente/geral, categoria, ativo).
+- Feriados:
+  - Módulo `feriados` com CRUD por barbearia e checagem de feriado ao criar agendamento (bloqueio da data).
+- Política de cancelamento:
+  - Módulo/entidade `politicas_cancelamento` com antecedência mínima em horas e multa percentual.
+  - Checagem de antecedência ao cancelar agendamento; bloqueia cancelamento fora da janela permitida.
+- Auditoria:
+  - Módulo `auditoria` com entidade e endpoints para registrar e listar eventos por barbearia (filtros por tipo e referência).

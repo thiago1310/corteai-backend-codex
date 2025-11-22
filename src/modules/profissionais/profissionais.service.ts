@@ -45,6 +45,7 @@ export class ProfissionaisService {
       email: data.email,
       telefone: data.telefone,
       comissao: data.comissao ?? 0,
+      salarioBase: data.salarioBase ?? 0,
       barbearia,
       senha: senhaHash,
       servicos,
@@ -65,6 +66,44 @@ export class ProfissionaisService {
 
   findOne(id: string, barbeariaId: string) {
     return this.getDetalhe(id, barbeariaId);
+  }
+
+  async metricas(id: string, barbeariaId: string, inicio?: Date, fim?: Date) {
+    const profissional = await this.findOwnedOrThrow(id, barbeariaId);
+    const qb = this.em
+      .getRepository('agendamentos')
+      .createQueryBuilder('ag')
+      .leftJoinAndSelect('ag.itens', 'item')
+      .leftJoin('ag.barbearia', 'barbearia')
+      .where('ag.profissionalId = :id', { id })
+      .andWhere('barbearia.id = :barbeariaId', { barbeariaId })
+      .andWhere('ag.status = :status', { status: 'FINALIZADO' });
+
+    if (inicio) {
+      qb.andWhere('ag.dataInicio >= :inicio', { inicio });
+    }
+    if (fim) {
+      qb.andWhere('ag.dataInicio <= :fim', { fim });
+    }
+
+    const ags = await qb.getMany();
+    const atendimentos = ags.length;
+    const receita = ags.reduce((acc, ag) => acc + this.calcularTotalItens(ag as any), 0);
+    const comissao =
+      ags.reduce((acc, ag) => {
+        const itens = (ag as any).itens ?? [];
+        const parcial = itens.reduce((s: number, item: any) => {
+          const base = Number(item.valorUnitario ?? 0);
+          const desconto = Number(item.descontoValor ?? 0);
+          const taxa = Number(item.taxaValor ?? 0);
+          const subtotal = (base - desconto + taxa) * (item.quantidade ?? 1);
+          const pct = item.comissaoPercentual ?? profissional.comissao ?? 0;
+          return s + subtotal * (pct / 100);
+        }, 0);
+        return acc + parcial;
+      }, 0);
+
+    return { atendimentos, receita, comissao, salarioBase: profissional.salarioBase };
   }
 
   async update(id: string, barbeariaId: string, data: UpdateProfissionalDto) {
@@ -94,6 +133,9 @@ export class ProfissionaisService {
     }
     if (data.comissao !== undefined) {
       profissional.comissao = data.comissao;
+    }
+    if (data.salarioBase !== undefined) {
+      profissional.salarioBase = data.salarioBase;
     }
     if (data.senha) {
       profissional.senha = await bcrypt.hash(data.senha, 10);
@@ -296,5 +338,15 @@ export class ProfissionaisService {
     }
 
     return servicos;
+  }
+
+  private calcularTotalItens(agendamento: { itens?: any[] }) {
+    return (agendamento.itens ?? []).reduce((acc, item) => {
+      const base = Number(item.valorUnitario ?? 0);
+      const desconto = Number(item.descontoValor ?? 0);
+      const taxa = Number(item.taxaValor ?? 0);
+      const qtd = item.quantidade ?? 1;
+      return acc + (base - desconto + taxa) * qtd;
+    }, 0);
   }
 }

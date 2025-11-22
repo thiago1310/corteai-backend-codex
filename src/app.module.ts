@@ -14,6 +14,13 @@ import { LancamentosModule } from './modules/lancamentos/lancamentos.module';
 import databaseConfig from './modules/config/database.config';
 import { AiAgentModule } from './modules/ai-agent/ai-agent.module';
 import { ClientesModule } from './modules/clientes/clientes.module';
+import { ProdutosModule } from './modules/produtos/produtos.module';
+import { FormasPagamentoModule } from './modules/formas-pagamento/formas-pagamento.module';
+import { FinanceiroModule } from './modules/financeiro/financeiro.module';
+import { AuditoriaModule } from './modules/auditoria/auditoria.module';
+import { FidelidadeModule } from './modules/fidelidade/fidelidade.module';
+import { CuponsModule } from './modules/cupons/cupons.module';
+import { FeriadosModule } from './modules/feriados/feriados.module';
 
 @Module({
   imports: [
@@ -29,6 +36,13 @@ import { ClientesModule } from './modules/clientes/clientes.module';
     LancamentosModule,
     AiAgentModule,
     ClientesModule,
+    ProdutosModule,
+    FormasPagamentoModule,
+    FinanceiroModule,
+    AuditoriaModule,
+    FidelidadeModule,
+    CuponsModule,
+    FeriadosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

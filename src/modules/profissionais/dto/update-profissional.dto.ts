@@ -38,6 +38,12 @@ export class UpdateProfissionalDto {
   comissao?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  salarioBase?: number;
+
+  @IsOptional()
   @MinLength(6)
   @MaxLength(120)
   senha?: string;

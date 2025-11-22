@@ -32,6 +32,9 @@ export class Profissional {
   @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
   comissao!: number; // percentual
 
+  @Column({ type: 'numeric', precision: 12, scale: 2, default: 0 })
+  salarioBase!: number;
+
   @ManyToOne(() => BarbeariaEntity, (b) => b.profissionais, { onDelete: 'CASCADE' })
   barbearia!: BarbeariaEntity;
 
