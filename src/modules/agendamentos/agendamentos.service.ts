@@ -35,6 +35,14 @@ import { FidelidadeService } from '../fidelidade/fidelidade.service';
 import { Feriado } from '../feriados/feriado.entity';
 import { PoliticaCancelamentoService } from './politica-cancelamento.service';
 import { ProfissionalHorario } from '../profissionais/profissional-horario.entity';
+import { ClienteEntity } from '../clientes/clientes.entity';
+import { NoShow } from './no-show.entity';
+import { ListaEspera } from './espera.entity';
+import { AuditoriaService } from '../auditoria/auditoria.service';
+import { AgendamentoPromocao, PromocaoTipo } from './agendamento-promocao.entity';
+import { Cupom } from '../cupons/cupons.entity';
+import { Giftcard, GiftcardStatus } from '../fidelidade/giftcard.entity';
+import { CashbackSaldo } from '../fidelidade/cashback-saldo.entity';
 
 export class AgendamentoItemDto {
   @IsEnum(AgendamentoItemTipo)
@@ -198,6 +206,20 @@ export class AddPagamentoDto {
   @IsOptional()
   @IsString()
   observacao?: string | null;
+
+  @IsOptional()
+  @IsString()
+  cupomCodigo?: string | null;
+
+  @IsOptional()
+  @IsString()
+  giftcardId?: string | null;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  cashbackValor?: number | null;
 }
 
 @Injectable()
@@ -215,6 +237,18 @@ export class AgendamentosService {
     private readonly contaReceberRepo: Repository<ContaReceber>,
     @InjectRepository(BloqueioAgenda)
     private readonly bloqueioRepo: Repository<BloqueioAgenda>,
+    @InjectRepository(NoShow)
+    private readonly noShowRepo: Repository<NoShow>,
+    @InjectRepository(ListaEspera)
+    private readonly esperaRepo: Repository<ListaEspera>,
+    @InjectRepository(AgendamentoPromocao)
+    private readonly promoRepo: Repository<AgendamentoPromocao>,
+    @InjectRepository(Cupom)
+    private readonly cupomRepo: Repository<Cupom>,
+    @InjectRepository(Giftcard)
+    private readonly giftcardRepo: Repository<Giftcard>,
+    @InjectRepository(CashbackSaldo)
+    private readonly cashbackRepo: Repository<CashbackSaldo>,
     @InjectRepository(Feriado)
     private readonly feriadoRepo: Repository<Feriado>,
     @InjectEntityManager() private readonly em: EntityManager,
@@ -222,6 +256,7 @@ export class AgendamentosService {
     private readonly formasPagamentoService: FormasPagamentoService,
     private readonly fidelidadeService: FidelidadeService,
     private readonly politicaCancelamentoService: PoliticaCancelamentoService,
+    private readonly auditoriaService: AuditoriaService,
   ) {}
 
   async create(data: CreateAgendamentoDto) {
@@ -279,6 +314,13 @@ export class AgendamentosService {
         });
         await this.itemRepo.save(entity);
         await this.registrarMovimentacaoProduto(entity, MovimentacaoTipo.SAIDA);
+        await this.audit('COMANDA_ITEM_ADD', barbearia.id, agendamento.usuario?.id, {
+          agendamentoId: saved.id,
+          itemId: entity.id,
+          tipo: entity.tipo,
+          servicoId: entity.servico?.id,
+          produtoId: entity.produto?.id,
+        });
       }
     }
 
@@ -300,6 +342,7 @@ export class AgendamentosService {
     barbeariaId: string,
     data: Date,
     intervaloMinutos = 60,
+    servicoId?: string,
   ) {
     const profissional = await this.em.findOne(Profissional, {
       where: { id: profissionalId },
@@ -348,12 +391,22 @@ export class AgendamentosService {
     );
     const slots: { inicio: Date; fim: Date }[] = [];
 
+    let intervalo = intervaloMinutos;
+    if (servicoId) {
+      const servico = await this.em.findOne(Servico, {
+        where: { id: servicoId, barbearia: { id: barbeariaId } },
+      });
+      if (servico?.tempoEstimado) {
+        intervalo = servico.tempoEstimado;
+      }
+    }
+
     horariosDia.forEach((h) => {
       const inicio = new Date(`${dataIso}T${h.abre}:00Z`);
       const fim = new Date(`${dataIso}T${h.fecha}:00Z`);
       let cursor = inicio;
       while (cursor < fim) {
-        const prox = new Date(cursor.getTime() + intervaloMinutos * 60000);
+        const prox = new Date(cursor.getTime() + intervalo * 60000);
         if (prox > fim) break;
         const slot = { inicio: cursor, fim: prox };
         if (!this.overlap(slot, bloqueios) && !this.overlap(slot, ocupados)) {
@@ -365,7 +418,8 @@ export class AgendamentosService {
 
     return {
       data: dataIso,
-      intervaloMinutos,
+      intervaloMinutos: intervalo,
+      servicoId: servicoId ?? null,
       slots,
     };
   }
@@ -388,6 +442,13 @@ export class AgendamentosService {
       });
       await this.itemRepo.save(entity);
       await this.registrarMovimentacaoProduto(entity, MovimentacaoTipo.SAIDA);
+      await this.audit('COMANDA_ITEM_ADD', agendamento.barbearia.id, agendamento.usuario?.id, {
+        agendamentoId: agendamento.id,
+        itemId: entity.id,
+        tipo: entity.tipo,
+        servicoId: entity.servico?.id,
+        produtoId: entity.produto?.id,
+      });
     }
 
     return this.repo.findOne({
@@ -479,6 +540,13 @@ export class AgendamentosService {
     if (item.tipo === AgendamentoItemTipo.PRODUTO && item.produto) {
       await this.registrarMovimentacaoProduto(item, MovimentacaoTipo.SAIDA);
     }
+    await this.audit('COMANDA_ITEM_UPDATE', agendamento.barbearia.id, agendamento.usuario?.id, {
+      agendamentoId: agendamento.id,
+      itemId: item.id,
+      tipo: item.tipo,
+      servicoId: item.servico?.id,
+      produtoId: item.produto?.id,
+    });
 
     return this.repo.findOne({
       where: { id: agendamento.id },
@@ -498,6 +566,13 @@ export class AgendamentosService {
     if (item.tipo === AgendamentoItemTipo.PRODUTO && item.produto) {
       await this.registrarMovimentacaoProduto(item, MovimentacaoTipo.ENTRADA);
     }
+    await this.audit('COMANDA_ITEM_REMOVE', item.agendamento.barbearia.id, item.agendamento.usuario?.id, {
+      agendamentoId: agendamentoId,
+      itemId: itemId,
+      tipo: item.tipo,
+      servicoId: item.servico?.id,
+      produtoId: item.produto?.id,
+    });
     return { id: itemId };
   }
 
@@ -563,11 +638,13 @@ export class AgendamentosService {
   async addPagamento(agendamentoId: string, dto: AddPagamentoDto) {
     const agendamento = await this.repo.findOne({
       where: { id: agendamentoId },
-      relations: ['barbearia'],
+      relations: ['barbearia', 'usuario'],
     });
     if (!agendamento) throw new NotFoundException('Agendamento nao encontrado');
 
     const forma = await this.formasPagamentoService.findOne(dto.formaPagamentoId, agendamento.barbearia.id);
+
+    const promoResultado = await this.aplicarPromocaoSeSolicitada(agendamento, dto);
 
     const pagamento = this.pagamentoRepo.create({
       agendamento,
@@ -577,8 +654,20 @@ export class AgendamentosService {
     });
     await this.pagamentoRepo.save(pagamento);
 
+    if (promoResultado?.promocao) {
+      promoResultado.promocao.pagamentoId = pagamento.id;
+      await this.promoRepo.save(promoResultado.promocao);
+    }
+
     await this.atualizarRecebimento(agendamentoId);
     await this.atualizarContaReceber(agendamentoId);
+    await this.audit('PAGAMENTO_ADD', agendamento.barbearia.id, agendamento.usuario?.id, {
+      agendamentoId,
+      pagamentoId: pagamento.id,
+      formaPagamentoId: dto.formaPagamentoId,
+      valor: dto.valor,
+      promocao: promoResultado?.detalhe ?? null,
+    });
 
     return this.pagamentoRepo.find({
       where: { agendamento: { id: agendamentoId } },
@@ -735,6 +824,12 @@ export class AgendamentosService {
       motivo: 'Movimentação por comanda',
       referenciaAgendamentoItem: item.id,
     });
+    await this.audit('ESTOQUE_MOV', item.produto.barbearia.id, null, {
+      produtoId: item.produto.id,
+      tipoMov,
+      quantidade: item.quantidade,
+      agendamentoItemId: item.id,
+    });
   }
 
   private async atualizarRecebimento(agendamentoId: string) {
@@ -839,6 +934,261 @@ export class AgendamentosService {
       conta.status = status;
     }
     await this.contaReceberRepo.save(conta);
+  }
+
+  async estornarPagamento(agendamentoId: string, pagamentoId: string) {
+    const pagamento = await this.pagamentoRepo.findOne({
+      where: { id: pagamentoId },
+      relations: ['agendamento', 'agendamento.barbearia', 'agendamento.usuario'],
+    });
+    if (!pagamento || pagamento.agendamento.id !== agendamentoId) {
+      throw new NotFoundException('Pagamento não encontrado');
+    }
+
+    const promocoes = await this.promoRepo.find({
+      where: { pagamentoId },
+      relations: ['agendamento'],
+    });
+    for (const promo of promocoes) {
+      if (promo.tipo === PromocaoTipo.GIFTCARD && promo.referenciaId) {
+        const gift = await this.giftcardRepo.findOne({ where: { id: promo.referenciaId } });
+        if (gift) {
+          gift.saldoAtual = Number((gift.saldoAtual + promo.valorAplicado).toFixed(2));
+          if (gift.status === GiftcardStatus.USADO && gift.saldoAtual > 0) {
+            gift.status = GiftcardStatus.ATIVO;
+          }
+          await this.giftcardRepo.save(gift);
+        }
+      }
+      if (promo.tipo === PromocaoTipo.CASHBACK && pagamento.agendamento.usuario?.id) {
+        await this.fidelidadeService.creditarValor(
+          pagamento.agendamento.barbearia.id,
+          pagamento.agendamento.usuario.id,
+          promo.valorAplicado,
+        );
+      }
+      await this.promoRepo.remove(promo);
+    }
+
+    await this.pagamentoRepo.remove(pagamento);
+    await this.atualizarRecebimento(agendamentoId);
+    await this.atualizarContaReceber(agendamentoId);
+    await this.audit('PAGAMENTO_ESTORNO', pagamento.agendamento.barbearia.id, pagamento.agendamento.usuario?.id, {
+      agendamentoId,
+      pagamentoId,
+    });
+    return { id: pagamentoId };
+  }
+
+  async adicionarListaEspera(dto: {
+    barbeariaId: string;
+    profissionalId: string;
+    clienteId?: string;
+    telefone?: string;
+    dataDesejada: string;
+    observacao?: string;
+  }) {
+    const [barbearia, profissional] = await Promise.all([
+      this.em.findOneByOrFail(BarbeariaEntity, { id: dto.barbeariaId }),
+      this.em.findOneByOrFail(Profissional, { id: dto.profissionalId }),
+    ]);
+    if (profissional.barbearia.id !== barbearia.id) {
+      throw new BadRequestException('Profissional não pertence à barbearia');
+    }
+    const cliente = dto.clienteId
+      ? await this.em.findOne(ClienteEntity, {
+          where: { id: dto.clienteId, barbeariaId: dto.barbeariaId },
+        })
+      : null;
+    const dataDesejada = new Date(dto.dataDesejada);
+    if (Number.isNaN(dataDesejada.getTime())) {
+      throw new BadRequestException('Data desejada inválida');
+    }
+    const entity = this.esperaRepo.create({
+      barbearia,
+      profissional,
+      cliente: cliente ?? null,
+      telefone: dto.telefone ?? null,
+      dataDesejada,
+      observacao: dto.observacao ?? null,
+      ativo: true,
+    });
+    return this.esperaRepo.save(entity);
+  }
+
+  async listarListaEspera(profissionalId: string, barbeariaId: string) {
+    return this.esperaRepo.find({
+      where: { profissional: { id: profissionalId }, barbearia: { id: barbeariaId }, ativo: true },
+      relations: ['cliente'],
+      order: { dataDesejada: 'ASC' },
+    });
+  }
+
+  private async audit(
+    tipo: string,
+    barbeariaId: string,
+    usuarioId?: string | null,
+    payload?: Record<string, unknown>,
+  ) {
+    try {
+      await this.auditoriaService.registrar({
+        barbeariaId,
+        tipo,
+        usuarioId: usuarioId ?? null,
+        payload: payload ?? null,
+      });
+    } catch {
+      // evitar quebra de fluxo por falha de auditoria
+    }
+  }
+
+  private async aplicarPromocaoSeSolicitada(
+    agendamento: Agendamento,
+    dto: AddPagamentoDto,
+  ): Promise<{ promocao?: AgendamentoPromocao; detalhe?: Record<string, unknown> }> {
+    const promocoes = [dto.cupomCodigo, dto.giftcardId, dto.cashbackValor && dto.cashbackValor > 0].filter(
+      Boolean,
+    );
+    // Combinação simples: permitir apenas uma promo por pagamento.
+    if (promocoes.length > 1) {
+      throw new BadRequestException('Use apenas uma promoção por pagamento (cupom/giftcard/cashback)');
+    }
+
+    const policy = await this.promoPoliticaService.get(agendamento.barbearia.id);
+
+    if (dto.cupomCodigo) {
+      const promo = await this.aplicarCupom(agendamento, dto.cupomCodigo);
+      return { promocao: promo, detalhe: { tipo: PromocaoTipo.CUPOM, referenciaId: promo.referenciaId, valor: promo.valorAplicado } };
+    }
+    if (dto.giftcardId) {
+      const promo = await this.aplicarGiftcard(agendamento, dto.giftcardId, dto.valor);
+      return { promocao: promo, detalhe: { tipo: PromocaoTipo.GIFTCARD, referenciaId: promo.referenciaId, valor: promo.valorAplicado } };
+    }
+    if (dto.cashbackValor && dto.cashbackValor > 0) {
+      const promo = await this.aplicarCashback(agendamento, dto.cashbackValor);
+      return { promocao: promo, detalhe: { tipo: PromocaoTipo.CASHBACK, referenciaId: promo.referenciaId, valor: promo.valorAplicado } };
+    }
+    return {};
+  }
+
+  private async aplicarCupom(agendamento: Agendamento, codigo: string) {
+    const cupom = await this.cupomRepo.findOne({
+      where: { codigo, barbearia: { id: agendamento.barbearia.id }, ativo: true },
+    });
+    if (!cupom) throw new NotFoundException('Cupom não encontrado ou inativo');
+    if (cupom.expiraEm && new Date(cupom.expiraEm) < new Date()) {
+      throw new BadRequestException('Cupom expirado');
+    }
+    await this.promoPoliticaService.validarPeriodo(agendamento.barbearia.id, PromocaoTipo.CUPOM);
+    const total = this.calcularTotalItens(agendamento);
+    let desconto = 0;
+    if (cupom.percentual) desconto += (total * cupom.percentual) / 100;
+    if (cupom.valorFixo) desconto += cupom.valorFixo;
+    desconto = Math.min(desconto, total);
+
+    // limites de uso
+    if (cupom.limiteUso) {
+      const count = await this.promoRepo.count({ where: { referenciaId: cupom.id, tipo: PromocaoTipo.CUPOM } });
+      if (count >= cupom.limiteUso) throw new BadRequestException('Limite de uso do cupom atingido');
+    }
+    if (cupom.limiteUsoPorCliente && agendamento.usuario?.id) {
+      const count = await this.promoRepo.count({
+        where: { referenciaId: cupom.id, tipo: PromocaoTipo.CUPOM, clienteId: agendamento.usuario.id },
+      });
+      if (count >= cupom.limiteUsoPorCliente) {
+        throw new BadRequestException('Limite de uso por cliente atingido');
+      }
+    }
+
+    return this.promoRepo.create({
+      agendamento,
+      tipo: PromocaoTipo.CUPOM,
+      referenciaId: cupom.id,
+      clienteId: agendamento.usuario?.id ?? null,
+      valorAplicado: Number(desconto.toFixed(2)),
+    });
+  }
+
+  private async aplicarGiftcard(agendamento: Agendamento, giftcardId: string, valorPagamento: number) {
+    const gift = await this.giftcardRepo.findOne({
+      where: { id: giftcardId, barbearia: { id: agendamento.barbearia.id } },
+    });
+    if (!gift || gift.status !== GiftcardStatus.ATIVO) throw new BadRequestException('Giftcard inválido');
+    if (gift.expiraEm && new Date(gift.expiraEm) < new Date()) {
+      throw new BadRequestException('Giftcard expirado');
+    }
+    await this.promoPoliticaService.validarPeriodo(agendamento.barbearia.id, PromocaoTipo.GIFTCARD);
+    const usar = Math.min(gift.saldoAtual, valorPagamento);
+    if (usar <= 0) throw new BadRequestException('Saldo insuficiente no giftcard');
+    gift.saldoAtual = Number((gift.saldoAtual - usar).toFixed(2));
+    if (gift.saldoAtual <= 0) gift.status = GiftcardStatus.USADO;
+    await this.giftcardRepo.save(gift);
+
+    return this.promoRepo.create({
+      agendamento,
+      tipo: PromocaoTipo.GIFTCARD,
+      referenciaId: gift.id,
+      clienteId: agendamento.usuario?.id ?? null,
+      valorAplicado: usar,
+    });
+  }
+
+  private async aplicarCashback(agendamento: Agendamento, valor: number) {
+    if (!agendamento.usuario?.id) {
+      throw new BadRequestException('Cashback requer cliente autenticado');
+    }
+    await this.promoPoliticaService.validarPeriodo(agendamento.barbearia.id, PromocaoTipo.CASHBACK);
+    const saldo = await this.cashbackRepo.findOne({
+      where: { barbearia: { id: agendamento.barbearia.id }, clienteId: agendamento.usuario.id },
+    });
+    if (!saldo || saldo.saldo < valor) {
+      throw new BadRequestException('Saldo de cashback insuficiente');
+    }
+    saldo.saldo = Number((saldo.saldo - valor).toFixed(2));
+    await this.cashbackRepo.save(saldo);
+
+    return this.promoRepo.create({
+      agendamento,
+      tipo: PromocaoTipo.CASHBACK,
+      referenciaId: null,
+      clienteId: agendamento.usuario.id,
+      valorAplicado: valor,
+    });
+  }
+
+  private async registrarNoShowOuCancelamentoTardio(
+    policy: PoliticaCancelamento,
+    agendamento: Agendamento,
+  ) {
+    if (!agendamento?.usuario?.id) return;
+    const cliente = await this.em.findOne(ClienteEntity, {
+      where: { id: agendamento.usuario.id, barbeariaId: agendamento.barbearia.id },
+    });
+    if (!cliente) return;
+
+    const diffMs = agendamento.dataInicio.getTime() - Date.now();
+    const diffHoras = diffMs / (1000 * 60 * 60);
+    const atraso = diffHoras < (policy.antecedenciaMinHoras ?? 0);
+    if (!atraso) return;
+
+    await this.noShowRepo.save(
+      this.noShowRepo.create({
+        cliente,
+        barbearia: agendamento.barbearia,
+      }),
+    );
+
+    if (policy.limiteCancelamentoSemAviso && policy.limiteCancelamentoSemAviso > 0) {
+      const totalCancelTardio = await this.noShowRepo.count({
+        where: {
+          cliente: { id: cliente.id },
+          barbearia: { id: agendamento.barbearia.id },
+        },
+      });
+      if (totalCancelTardio > policy.limiteCancelamentoSemAviso) {
+        throw new BadRequestException('Limite de cancelamentos tardios atingido para este cliente');
+      }
+    }
   }
 
   private overlap(

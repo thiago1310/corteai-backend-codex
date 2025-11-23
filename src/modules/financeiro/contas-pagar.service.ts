@@ -7,12 +7,14 @@ import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorat
 import { EntityManager } from 'typeorm';
 import { CreateContaPagarDto } from './dto/create-conta-pagar.dto';
 import { UpdateContaPagarDto } from './dto/update-conta-pagar.dto';
+import { AuditoriaService } from '../auditoria/auditoria.service';
 
 @Injectable()
 export class ContasPagarService {
   constructor(
     @InjectRepository(ContaPagar) private readonly repo: Repository<ContaPagar>,
     @InjectEntityManager() private readonly em: EntityManager,
+    private readonly auditoriaService: AuditoriaService,
   ) {}
 
   async findAll(barbeariaId: string) {
@@ -45,7 +47,9 @@ export class ContasPagarService {
       centroCusto: data.centroCusto ?? null,
       barbearia,
     });
-    return this.repo.save(entity);
+    const saved = await this.repo.save(entity);
+    await this.audit(barbeariaId, 'CONTA_PAGAR_ADD', { id: saved.id, valor: saved.valor });
+    return saved;
   }
 
   async update(id: string, barbeariaId: string, data: UpdateContaPagarDto) {
@@ -57,12 +61,27 @@ export class ContasPagarService {
       categoria: data.categoria ?? conta.categoria,
       centroCusto: data.centroCusto ?? conta.centroCusto,
     });
-    return this.repo.save(conta);
+    const saved = await this.repo.save(conta);
+    await this.audit(barbeariaId, 'CONTA_PAGAR_UPDATE', { id, valor: saved.valor, status: saved.status });
+    return saved;
   }
 
   async remove(id: string, barbeariaId: string) {
     const conta = await this.findOne(id, barbeariaId);
     await this.repo.remove(conta);
+    await this.audit(barbeariaId, 'CONTA_PAGAR_REMOVE', { id });
     return { id };
+  }
+
+  private async audit(barbeariaId: string, tipo: string, payload?: Record<string, unknown>) {
+    try {
+      await this.auditoriaService.registrar({
+        barbeariaId,
+        tipo,
+        payload: payload ?? null,
+      });
+    } catch {
+      /* evitar quebra */
+    }
   }
 }

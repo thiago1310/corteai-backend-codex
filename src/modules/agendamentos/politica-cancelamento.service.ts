@@ -33,6 +33,9 @@ export class PoliticaCancelamentoService {
     }
     policy.antecedenciaMinHoras = dto.antecedenciaMinHoras;
     policy.multaPercentual = dto.multaPercentual ?? 0;
+    policy.multaValorFixo = dto.multaValorFixo ?? 0;
+    policy.limiteNoShow = dto.limiteNoShow ?? 0;
+    policy.limiteCancelamentoSemAviso = dto.limiteCancelamentoSemAviso ?? 0;
     return this.repo.save(policy);
   }
 

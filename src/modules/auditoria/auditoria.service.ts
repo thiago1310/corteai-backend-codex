@@ -24,7 +24,7 @@ export class AuditoriaService {
       referenciaId: data.referenciaId ?? null,
       usuarioId: data.usuarioId ?? null,
       mensagem: data.mensagem ?? null,
-      payload: data.payload ?? null,
+      payload: this.mascararPayload(data.payload),
     });
     return this.repo.save(entity);
   }
@@ -44,5 +44,26 @@ export class AuditoriaService {
     }
 
     return qb.getMany();
+  }
+
+  private mascararPayload(payload?: Record<string, unknown> | null) {
+    if (!payload) return null;
+    const clone: any = Array.isArray(payload) ? [...payload] : { ...payload };
+    const maskFields = ['telefone', 'cpf', 'cnpj', 'email', 'token', 'apikey'];
+    for (const key of Object.keys(clone)) {
+      if (maskFields.includes(key)) {
+        const val = String(clone[key] ?? '');
+        clone[key] = this.mask(val);
+      } else if (typeof clone[key] === 'object' && clone[key] !== null) {
+        clone[key] = this.mascararPayload(clone[key] as any);
+      }
+    }
+    return clone;
+  }
+
+  private mask(valor: string) {
+    if (!valor) return valor;
+    if (valor.length <= 4) return '*'.repeat(valor.length);
+    return `${valor.slice(0, 2)}***${valor.slice(-2)}`;
   }
 }

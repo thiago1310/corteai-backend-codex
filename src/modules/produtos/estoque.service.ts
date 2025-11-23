@@ -5,12 +5,14 @@ import { Produto } from './produtos.entity';
 import { ProdutoMovimentacao, MovimentacaoTipo } from './produto-movimentacao.entity';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
 import { MovimentarEstoqueDto } from './dto/movimentar-estoque.dto';
+import { AuditoriaService } from '../auditoria/auditoria.service';
 
 @Injectable()
 export class EstoqueService {
   constructor(
     @InjectRepository(Produto) private readonly produtoRepo: Repository<Produto>,
     @InjectRepository(ProdutoMovimentacao) private readonly movRepo: Repository<ProdutoMovimentacao>,
+    private readonly auditoriaService: AuditoriaService,
   ) {}
 
   async movimentar(barbeariaId: string, dto: MovimentarEstoqueDto) {
@@ -44,6 +46,12 @@ export class EstoqueService {
       referenciaAgendamentoItem: dto.referenciaAgendamentoItem ?? null,
     });
     await this.movRepo.save(mov);
+    await this.audit(produto.barbearia.id, 'ESTOQUE_MOV_MANUAL', {
+      produtoId: produto.id,
+      tipo: dto.tipo,
+      quantidade: dto.quantidade,
+      motivo: dto.motivo ?? null,
+    });
     return { saldo: produto.estoqueAtual };
   }
 
@@ -52,5 +60,21 @@ export class EstoqueService {
     if (tipo === MovimentacaoTipo.SAIDA) return atual - quantidade;
     // AJUSTE: quantidade positivo adiciona, negativo remove (caller deve mandar sinal correto)
     return atual + quantidade;
+  }
+
+  private async audit(
+    barbeariaId: string,
+    tipo: string,
+    payload?: Record<string, unknown>,
+  ) {
+    try {
+      await this.auditoriaService.registrar({
+        barbeariaId,
+        tipo,
+        payload: payload ?? null,
+      });
+    } catch {
+      /* evitar quebra de fluxo */
+    }
   }
 }

@@ -52,3 +52,12 @@
   - Checagem de antecedência ao cancelar agendamento; bloqueia cancelamento fora da janela permitida.
 - Auditoria:
   - Módulo `auditoria` com entidade e endpoints para registrar e listar eventos por barbearia (filtros por tipo e referência).
+- Auditoria sensível:
+  - Auditoria mascara campos sensíveis (telefone/cpf/cnpj/email/token/apikey).
+  - Eventos auditados: itens de comanda (add/update/remove), pagamentos, movimentação de estoque (manual e por comanda), contas a pagar e operações de fidelidade (config, crédito/débito, giftcard emitido).
+- Promoções/Fidelidade antiabuso (mínimo):
+  - Pagamento aceita uma promo por vez (cupom OU giftcard OU cashback).
+  - Cupom: valida expiração e limites de uso geral/por cliente; registra em `agendamento_promocoes`.
+  - Giftcard: valida status/saldo/expiração; debita e registra promo ligada ao pagamento.
+  - Cashback: debita saldo na hora do pagamento e registra promo; creditar valor helper para estorno.
+  - Estorno de cashback no cancelamento já existia; giftcard/cupom não são estornados em pagamento ainda.

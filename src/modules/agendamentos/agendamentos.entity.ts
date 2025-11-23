@@ -6,6 +6,7 @@ import { AgendamentoServico } from './agendamento-servicos.entity';
 import { AgendamentoPagamento } from './pagamentos.entity';
 import { Recebimento } from './recebimento.entity';
 import { ContaReceber } from './conta-receber.entity';
+import { AgendamentoPromocao } from './agendamento-promocao.entity';
 
 export enum AgendamentoStatus {
   PENDENTE = 'PENDENTE',
@@ -49,4 +50,7 @@ export class Agendamento {
 
   @OneToOne(() => ContaReceber, (cr) => cr.agendamento, { cascade: true })
   contaReceber?: ContaReceber;
+
+  @OneToMany(() => AgendamentoPromocao, (p) => p.agendamento, { cascade: true })
+  promocoes!: AgendamentoPromocao[];
 }

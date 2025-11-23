@@ -12,4 +12,8 @@ export class DisponibilidadeProfissionalDto {
   @IsInt()
   @Min(15)
   intervaloMinutos?: number;
+
+  @IsOptional()
+  @IsString()
+  servicoId?: string;
 }

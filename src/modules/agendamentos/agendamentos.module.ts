@@ -23,6 +23,14 @@ import { PoliticaCancelamento } from './politica-cancelamento.entity';
 import { PoliticaCancelamentoService } from './politica-cancelamento.service';
 import { PoliticaCancelamentoController } from './politica-cancelamento.controller';
 import { ProfissionalHorario } from '../profissionais/profissional-horario.entity';
+import { ClienteEntity } from '../clientes/clientes.entity';
+import { NoShow } from './no-show.entity';
+import { ListaEspera } from './espera.entity';
+import { AuditoriaModule } from '../auditoria/auditoria.module';
+import { AgendamentoPromocao } from './agendamento-promocao.entity';
+import { PromocaoPolitica } from './promocao-politica.entity';
+import { PromocaoPoliticaService } from './promocao-politica.service';
+import { PromocaoPoliticaController } from './promocao-politica.controller';
 
 @Module({
   imports: [
@@ -39,13 +47,30 @@ import { ProfissionalHorario } from '../profissionais/profissional-horario.entit
       Feriado,
       PoliticaCancelamento,
       ProfissionalHorario,
+      ClienteEntity,
+      NoShow,
+      ListaEspera,
+      AgendamentoPromocao,
+      PromocaoPolitica,
     ]),
     ProdutosModule,
     FormasPagamentoModule,
     FidelidadeModule,
     FeriadosModule,
+    AuditoriaModule,
   ],
-  controllers: [AgendamentosController, BloqueiosController, PoliticaCancelamentoController],
-  providers: [AgendamentosService, BloqueiosService, AgendaAutomaticaService, PoliticaCancelamentoService],
+  controllers: [
+    AgendamentosController,
+    BloqueiosController,
+    PoliticaCancelamentoController,
+    PromocaoPoliticaController,
+  ],
+  providers: [
+    AgendamentosService,
+    BloqueiosService,
+    AgendaAutomaticaService,
+    PoliticaCancelamentoService,
+    PromocaoPoliticaService,
+  ],
 })
 export class AgendamentosModule {}

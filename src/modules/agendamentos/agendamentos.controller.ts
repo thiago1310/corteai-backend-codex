@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -22,6 +23,7 @@ import {
 } from './agendamentos.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DisponibilidadeProfissionalDto } from './dto/disponibilidade-profissional.dto';
+import { CriarEsperaDto } from './dto/criar-espera.dto';
 
 @Controller('agendamentos')
 @UsePipes(
@@ -51,7 +53,7 @@ export class AgendamentosController {
   disponibilidade(@Param('id') id: string, @Query() query: DisponibilidadeProfissionalDto, @Req() req) {
     const barbeariaId = this.barbeariaIdOuErro(req);
     const data = query.data ? new Date(query.data) : new Date();
-    return this.service.getDisponibilidade(id, barbeariaId, data, query.intervaloMinutos);
+    return this.service.getDisponibilidade(id, barbeariaId, data, query.intervaloMinutos, query.servicoId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -82,6 +84,26 @@ export class AgendamentosController {
   @Post(':id/pagamentos')
   addPagamento(@Param('id') id: string, @Body() body: AddPagamentoDto) {
     return this.service.addPagamento(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/pagamentos/:pagamentoId/estorno')
+  estornarPagamento(@Param('id') id: string, @Param('pagamentoId') pagamentoId: string) {
+    return this.service.estornarPagamento(id, pagamentoId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('profissionais/:id/espera')
+  adicionarEspera(@Param('id') id: string, @Req() req, @Body() body: CriarEsperaDto) {
+    const barbeariaId = this.barbeariaIdOuErro(req);
+    return this.service.adicionarListaEspera({ ...body, profissionalId: id, barbeariaId });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profissionais/:id/espera')
+  listarEspera(@Param('id') id: string, @Req() req) {
+    const barbeariaId = this.barbeariaIdOuErro(req);
+    return this.service.listarListaEspera(id, barbeariaId);
   }
 
   private barbeariaIdOuErro(req: any): string {

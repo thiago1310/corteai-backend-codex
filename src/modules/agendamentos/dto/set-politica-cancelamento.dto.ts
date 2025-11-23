@@ -9,4 +9,19 @@ export class SetPoliticaCancelamentoDto {
   @IsNumber()
   @Min(0)
   multaPercentual?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  multaValorFixo?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  limiteNoShow?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  limiteCancelamentoSemAviso?: number;
 }

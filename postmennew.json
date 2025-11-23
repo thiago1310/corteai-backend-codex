@@ -1,0 +1,1970 @@
+{
+  "info": {
+    "_postman_id": "corteai-full-endpoints",
+    "name": "CorteAI - All Controllers",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "app",
+      "item": [
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "agendamentos",
+      "item": [
+        {
+          "name": "POST /agendamentos",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /agendamentos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agendamentos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /agendamentos/profissionais/:id/disponibilidade",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agendamentos/profissionais/:id/disponibilidade",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /agendamentos/:id/itens",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos/:id/itens",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /agendamentos/:id/itens/:itemId",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/agendamentos/:id/itens/:itemId",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /agendamentos/:id/itens/:itemId/remove",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos/:id/itens/:itemId/remove",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /agendamentos/:id/status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/agendamentos/:id/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /agendamentos/:id/pagamentos",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos/:id/pagamentos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /agendamentos/:id/pagamentos/:pagamentoId/estorno",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos/:id/pagamentos/:pagamentoId/estorno",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /agendamentos/profissionais/:id/espera",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos/profissionais/:id/espera",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /agendamentos/profissionais/:id/espera",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agendamentos/profissionais/:id/espera",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bloqueios",
+      "item": [
+        {
+          "name": "GET /bloqueios",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bloqueios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /bloqueios",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/bloqueios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /bloqueios/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/bloqueios/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "politica-cancelamento",
+      "item": [
+        {
+          "name": "GET /agendamentos/politica-cancelamento",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agendamentos/politica-cancelamento",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /agendamentos/politica-cancelamento",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/agendamentos/politica-cancelamento",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "promocao-politica",
+      "item": [
+        {
+          "name": "GET /promocoes/politica",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/promocoes/politica",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /promocoes/politica",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/promocoes/politica",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ai-agent",
+      "item": [
+        {
+          "name": "POST /ia/perguntar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/perguntar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/evolution/webhook",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/evolution/webhook",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/barbearia-webhook",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/barbearia-webhook",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/treinar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/treinar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /ia/base-conhecimento",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/base-conhecimento",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /ia/base-conhecimento",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/base-conhecimento",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /ia/base-conhecimento/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/ia/base-conhecimento/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /ia/base-conhecimento/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/ia/base-conhecimento/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /ia/configuracao",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/configuracao",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "PUT /ia/configuracao",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/ia/configuracao",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/configuracao/reset",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/configuracao/reset",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /ia/historico",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/historico",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /ia/evolution/sessao",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/evolution/sessao",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /ia/evolution/sessao",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/evolution/sessao",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/evolution/status",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/evolution/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /ia/evolution/status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/evolution/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /ia/evolution/instancia",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/evolution/instancia",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "DELETE /ia/evolution/instancia",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/ia/evolution/instancia",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /ia/chat-externo",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/chat-externo",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/chat-externo-buscar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/chat-externo-buscar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /ia/chat-status",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ia/chat-status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /ia/chat-status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ia/chat-status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "auditoria",
+      "item": [
+        {
+          "name": "GET /auditoria",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auditoria",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /auditoria",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auditoria",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"thiago.1310@live.com\",\"senha\":\"Wq3h4hdcxh@\",\"scope\":\"barbearia\"}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/register/usuario",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register/usuario",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Cliente\",\"telefone\":\"11999990000\",\"email\":\"cliente@example.com\",\"cpf\":\"12345678900\",\"senha\":\"123456\",\"tipo\":\"cliente\"}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/register/barbearia",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register/barbearia",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Barbearia X\",\"cpfCnpj\":\"12345678000100\",\"email\":\"contato@barbearia.com\",\"senha\":\"123456\",\"telefone\":\"11999990000\"}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /auth/password",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/auth/password",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"{{usuarioId}}\",\"senhaAtual\":\"123456\",\"novaSenha\":\"654321\",\"scope\":\"barbearia\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "barbearias",
+      "item": [
+        {
+          "name": "POST /barbearias",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/barbearias",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /barbearias",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/barbearias",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /barbearias/link/:link",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/barbearias/link/:link",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "PATCH /barbearias/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/barbearias/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /barbearias/:id/horarios",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/barbearias/:id/horarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "PUT /barbearias/:id/horarios",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/barbearias/:id/horarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /barbearias/:id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/barbearias/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "clientes",
+      "item": [
+        {
+          "name": "POST /clientes",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/clientes",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Joao Silva\",\"telefone\":\"+55 11 98888-0000\",\"email\":\"joao@exemplo.com\",\"cpf\":\"12345678900\",\"dataCadastro\":\"2025-01-01\",\"dataAniversario\":\"1990-05-10\"}"
+            }
+          }
+        },
+        {
+          "name": "GET /clientes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/clientes?nome=Joao&telefone=5511999990000",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /clientes/:id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/clientes/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "PATCH /clientes/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/clientes/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Joao Atualizado\",\"telefone\":\"+55 11 97777-1234\",\"email\":\"joao.atualizado@exemplo.com\",\"cpf\":\"12345678900\",\"dataCadastro\":\"2025-01-10\",\"dataAniversario\":\"1990-05-10\"}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /clientes/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/clientes/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /clientes/evolution/sincronizar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/clientes/evolution/sincronizar",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"token\":\"{{webhookToken}}\",\"instanceName\":\"instancia1\",\"telefone\":\"5511988880000\",\"nome\":\"Cliente Evolution\",\"email\":\"cliente@exemplo.com\",\"cpf\":\"12345678900\",\"dataAniversario\":\"1995-02-10\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "cupons",
+      "item": [
+        {
+          "name": "GET /cupons",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cupons",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /cupons",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/cupons",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /cupons/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/cupons/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /cupons/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/cupons/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "faq",
+      "item": [
+        {
+          "name": "POST /faq",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/faq",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /faq",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/faq",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "feriados",
+      "item": [
+        {
+          "name": "GET /feriados",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/feriados",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /feriados",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/feriados",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /feriados/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/feriados/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /feriados/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/feriados/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fidelidade",
+      "item": [
+        {
+          "name": "POST /fidelidade/config",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/fidelidade/config",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /fidelidade/cashback/creditar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/fidelidade/cashback/creditar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /fidelidade/cashback/debitar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/fidelidade/cashback/debitar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /fidelidade/giftcards",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/fidelidade/giftcards",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /fidelidade/giftcards",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fidelidade/giftcards",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "contas-pagar",
+      "item": [
+        {
+          "name": "GET /contas-pagar",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/contas-pagar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /contas-pagar",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contas-pagar",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /contas-pagar/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/contas-pagar/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /contas-pagar/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/contas-pagar/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "formas-pagamento",
+      "item": [
+        {
+          "name": "GET /formas-pagamento",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/formas-pagamento",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /formas-pagamento",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/formas-pagamento",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /formas-pagamento/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/formas-pagamento/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /formas-pagamento/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/formas-pagamento/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "lancamentos",
+      "item": [
+        {
+          "name": "POST /lancamentos",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/lancamentos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /lancamentos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/lancamentos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "produtos",
+      "item": [
+        {
+          "name": "GET /produtos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/produtos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /produtos",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/produtos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /produtos/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/produtos/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /produtos/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/produtos/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "profissionais",
+      "item": [
+        {
+          "name": "GET /profissionais",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/profissionais",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /profissionais/:id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/profissionais/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /profissionais",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/profissionais",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /profissionais/:id/metricas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/profissionais/:id/metricas",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "PATCH /profissionais/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/profissionais/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /profissionais/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/profissionais/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "servicos",
+      "item": [
+        {
+          "name": "GET /servicos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/servicos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /servicos/busca",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/servicos/busca",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST /servicos",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/servicos",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /servicos/:id",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/servicos/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /servicos/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/servicos/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "usuarios",
+      "item": [
+        {
+          "name": "POST /usuarios",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/usuarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /usuarios",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/usuarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /usuarios/:id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/usuarios/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "DELETE /usuarios/:id",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/usuarios/:id",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:6363"
+    },
+    {
+      "key": "jwtToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NGU5ZmRkMi1iOWQ2LTQ1NjMtYjQxYS0yY2Q2NDBiYzQwMWMiLCJzY29wZSI6ImJhcmJlYXJpYSIsImVtYWlsIjoidGhpYWdvLjEzMTBAbGl2ZS5jb20iLCJpYXQiOjE3NjM5MDI0OTgsImV4cCI6MTc2NDUwNzI5OH0.sU-HjCuqXBNVsb8nMBRNtbBz7G1w-SSm-0qpL7_hTSA"
+    },
+    {
+      "key": "webhookToken",
+      "value": ""
+    },
+    {
+      "key": "barbeariaId",
+      "value": ""
+    },
+    {
+      "key": "barbeariaLink",
+      "value": ""
+    },
+    {
+      "key": "usuarioId",
+      "value": ""
+    },
+    {
+      "key": "profissionalId",
+      "value": ""
+    },
+    {
+      "key": "agendamentoId",
+      "value": ""
+    },
+    {
+      "key": "itemId",
+      "value": ""
+    },
+    {
+      "key": "pagamentoId",
+      "value": ""
+    },
+    {
+      "key": "servicoId",
+      "value": ""
+    },
+    {
+      "key": "produtoId",
+      "value": ""
+    },
+    {
+      "key": "clienteId",
+      "value": ""
+    },
+    {
+      "key": "formaPagamentoId",
+      "value": ""
+    },
+    {
+      "key": "cupomId",
+      "value": ""
+    },
+    {
+      "key": "giftcardId",
+      "value": ""
+    },
+    {
+      "key": "contaPagarId",
+      "value": ""
+    },
+    {
+      "key": "bloqueioId",
+      "value": ""
+    },
+    {
+      "key": "feriadoId",
+      "value": ""
+    },
+    {
+      "key": "conhecimentoId",
+      "value": ""
+    }
+  ]
+}

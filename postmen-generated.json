@@ -1,0 +1,383 @@
+{
+  "info": {
+    "_postman_id": "corteai-generated",
+    "name": "CorteAI New Endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Agendamentos",
+      "item": [
+        {
+          "name": "Listar agendamentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/agendamentos"
+          }
+        },
+        {
+          "name": "Criar agendamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profissionalId\": \"{{profissionalId}}\",\n  \"usuarioId\": \"{{clienteId}}\",\n  \"barbeariaId\": \"{{barbeariaId}}\",\n  \"dataInicio\": \"2025-12-10T13:00:00Z\",\n  \"dataFimPrevisto\": \"2025-12-10T14:00:00Z\",\n  \"servicosIds\": [\"{{servicoId}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/agendamentos"
+          }
+        },
+        {
+          "name": "Disponibilidade profissional",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/agendamentos/profissionais/{{profissionalId}}/disponibilidade?data=2025-12-10&servicoId={{servicoId}}&intervaloMinutos=30"
+          }
+        },
+        {
+          "name": "Adicionar itens na comanda",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\"tipo\":\"SERVICO\",\"servicoId\":\"{{servicoId}}\",\"quantidade\":1},\n    {\"tipo\":\"PRODUTO\",\"produtoId\":\"{{produtoId}}\",\"quantidade\":1,\"valorUnitario\":30}\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/agendamentos/{{agendamentoId}}/itens"
+          }
+        },
+        {
+          "name": "Atualizar item da comanda",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"quantidade\": 2, \"valorUnitario\": 40 }" },
+            "url": "{{baseUrl}}/agendamentos/{{agendamentoId}}/itens/{{itemId}}"
+          }
+        },
+        {
+          "name": "Remover item da comanda",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/agendamentos/{{agendamentoId}}/itens/{{itemId}}/remove"
+          }
+        },
+        {
+          "name": "Atualizar status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"EM_ATENDIMENTO\" }" },
+            "url": "{{baseUrl}}/agendamentos/{{agendamentoId}}/status"
+          }
+        },
+        {
+          "name": "Registrar pagamento (com promoção opcional)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formaPagamentoId\": \"{{formaPagamentoId}}\",\n  \"valor\": 100,\n  \"cupomCodigo\": \"CORTEX10\"\n}"
+            },
+            "url": "{{baseUrl}}/agendamentos/{{agendamentoId}}/pagamentos"
+          }
+        },
+        {
+          "name": "Estornar pagamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/agendamentos/{{agendamentoId}}/pagamentos/{{pagamentoId}}/estorno"
+          }
+        },
+        {
+          "name": "Lista de espera - adicionar",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"telefone\": \"+55 11 98888-0000\",\n  \"dataDesejada\": \"2025-12-10T15:00:00Z\",\n  \"observacao\": \"Preferência tarde\"\n}"
+            },
+            "url": "{{baseUrl}}/agendamentos/profissionais/{{profissionalId}}/espera"
+          }
+        },
+        {
+          "name": "Lista de espera - listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/agendamentos/profissionais/{{profissionalId}}/espera"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Políticas",
+      "item": [
+        {
+          "name": "Política de cancelamento - obter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/agendamentos/politica-cancelamento"
+          }
+        },
+        {
+          "name": "Política de cancelamento - salvar",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"antecedenciaMinHoras\": 2, \"multaPercentual\": 10, \"multaValorFixo\": 5, \"limiteNoShow\": 2, \"limiteCancelamentoSemAviso\": 3 }"
+            },
+            "url": "{{baseUrl}}/agendamentos/politica-cancelamento"
+          }
+        },
+        {
+          "name": "Política de promoções - obter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/promocoes/politica"
+          }
+        },
+        {
+          "name": "Política de promoções - salvar",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"permitirCupomCashback\": false, \"permitirGiftcardCashback\": false, \"limiteUsoPeriodoDias\": 7, \"limiteUsoPeriodo\": 10 }"
+            },
+            "url": "{{baseUrl}}/promocoes/politica"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fidelidade / Cupons",
+      "item": [
+        {
+          "name": "Configurar cashback",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"percentual\": 5, \"valorMinimo\": 20, \"ativo\": true }"
+            },
+            "url": "{{baseUrl}}/fidelidade/config"
+          }
+        },
+        {
+          "name": "Debitar cashback",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"clienteId\": \"{{clienteId}}\", \"valor\": 10 }"
+            },
+            "url": "{{baseUrl}}/fidelidade/cashback/debitar"
+          }
+        },
+        {
+          "name": "Emitir giftcard",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"clienteId\": \"{{clienteId}}\", \"valor\": 50, \"expiraEm\": \"2026-01-01\" }"
+            },
+            "url": "{{baseUrl}}/fidelidade/giftcards"
+          }
+        },
+        {
+          "name": "Listar giftcards",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/fidelidade/giftcards"
+          }
+        },
+        {
+          "name": "Criar cupom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"codigo\": \"CORTEX10\", \"percentual\": 10, \"limiteUso\": 100, \"limiteUsoPorCliente\": 2, \"expiraEm\": \"2026-01-01\" }"
+            },
+            "url": "{{baseUrl}}/cupons"
+          }
+        },
+        {
+          "name": "Listar cupons",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/cupons"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financeiro / Estoque",
+      "item": [
+        {
+          "name": "Contas a pagar - listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/contas-pagar"
+          }
+        },
+        {
+          "name": "Contas a pagar - criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"descricao\": \"Compra produtos\", \"valor\": 200, \"status\": \"PENDENTE\", \"vencimento\": \"2025-12-20\", \"categoria\": \"Estoque\" }"
+            },
+            "url": "{{baseUrl}}/contas-pagar"
+          }
+        },
+        {
+          "name": "Movimentar estoque (manual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"produtoId\": \"{{produtoId}}\", \"tipo\": \"ENTRADA\", \"quantidade\": 10, \"motivo\": \"Compra\" }"
+            },
+            "url": "{{baseUrl}}/produtos/movimentar"
+          },
+          "description": "Necessário criar endpoint se não existir; usar para registrar entrada/saída manual."
+        }
+      ]
+    },
+    {
+      "name": "Feriados / Bloqueios / Auditoria",
+      "item": [
+        {
+          "name": "Criar feriado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"data\": \"2025-12-25\", \"nome\": \"Natal\" }" },
+            "url": "{{baseUrl}}/feriados"
+          }
+        },
+        {
+          "name": "Listar feriados",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/feriados"
+          }
+        },
+        {
+          "name": "Listar auditoria",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": "{{baseUrl}}/auditoria"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "" },
+    { "key": "jwtToken", "value": "" },
+    { "key": "barbeariaId", "value": "" },
+    { "key": "profissionalId", "value": "" },
+    { "key": "agendamentoId", "value": "" },
+    { "key": "pagamentoId", "value": "" },
+    { "key": "servicoId", "value": "" },
+    { "key": "produtoId", "value": "" },
+    { "key": "clienteId", "value": "" },
+    { "key": "formaPagamentoId", "value": "" }
+  ]
+}
