@@ -2,32 +2,24 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
   Post,
   Put,
-  Query,
   Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
-  ForbiddenException,
 } from '@nestjs/common';
-
-import { AiAgentService } from './ai-agent.service';
-import { PerguntarDto } from './dto/perguntar.dto';
-import { TreinamentoDto } from './dto/treinamento.dto';
-import { AtualizarConhecimentoDto, CriarConhecimentoDto } from './dto/conhecimento.dto';
-import { SalvarConfiguracaoAgenteDto } from './dto/configuracao-agente.dto';
-import { AtualizarStatusEvolutionDto } from './dto/evolution-status.dto';
-
-import { UpsertChatStatusDto, GetChatStatusDto } from './dto/chat-status.dto';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { BuscarChatExternoDto } from './dto/buscar-chat-externo.dto';
-import { RegistrarChatExternoDto } from './dto/registrar-chat-externo.dto';
-import { ConsultarBarbeariaWebhookDto } from './dto/consultar-barbearia-webhook.dto';
-import { EvolutionWebhookDto } from './dto/evolution-webhook.dto';
+import { AiAgentService } from './ai-agent.service';
+import { AtualizarDadosImportantesDto, CriarConversaDto, RenovarTokenConversaDto, ResponderConversaDto } from './dto/conversa.dto';
+import { SalvarConfiguracaoAgenteDto } from './dto/configuracao-agente.dto';
+import { AtualizarDocumentoDto, CriarDocumentoDto } from './dto/documento.dto';
+import { CriarMensagemDto } from './dto/mensagem.dto';
 
 @Controller('ia')
 @UsePipes(
@@ -38,178 +30,104 @@ import { EvolutionWebhookDto } from './dto/evolution-webhook.dto';
   }),
 )
 export class AiAgentController {
-  constructor(private readonly aiAgentService: AiAgentService) { }
-
-  @Post('perguntar')
-  async perguntar(@Body() dto: PerguntarDto) {
-    this.validarTokenOuErro(dto.token);
-    return this.aiAgentService.perguntar(dto);
-  }
-
-  @Post('evolution/webhook')
-  async evolutionWebhook(@Body() dto) {
-    this.validarTokenOuErro(dto.token);
-    return this.aiAgentService.processarEvolutionWebhook(dto);
-  }
-
-  @Post('barbearia-webhook')
-  async consultarBarbeariaWebhook(@Body() dto: ConsultarBarbeariaWebhookDto) {
-    return this.aiAgentService.consultarBarbeariaViaWebhook(dto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('treinar')
-  async treinar(@Req() req, @Body() dto: TreinamentoDto) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    dto.barbeariaId = barbeariaId;
-    return this.aiAgentService.treinar(dto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('base-conhecimento')
-  async listarBase(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.listarBaseConhecimento(barbeariaId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('base-conhecimento')
-  async criarConhecimento(@Req() req, @Body() dto: CriarConhecimentoDto) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    dto.barbeariaId = barbeariaId;
-    return this.aiAgentService.criarConhecimento(dto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('base-conhecimento/:id')
-  async atualizarConhecimento(
-    @Param('id') id: string,
-    @Req() req,
-    @Body() dto: AtualizarConhecimentoDto,
-  ) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.atualizarConhecimento(id, barbeariaId, dto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete('base-conhecimento/:id')
-  async removerConhecimento(@Param('id') id: string, @Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.removerConhecimento(id, barbeariaId);
-  }
+  constructor(private readonly aiAgentService: AiAgentService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('configuracao')
-  async obterConfiguracao(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.obterConfiguracaoAgente(barbeariaId);
+  obterConfiguracao(@Req() req: any) {
+    return this.aiAgentService.obterConfiguracaoAgente(this.clienteIdOuErro(req));
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('configuracao')
-  async salvarConfiguracao(@Req() req, @Body() dto: SalvarConfiguracaoAgenteDto) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.salvarConfiguracaoAgente(barbeariaId, dto);
+  salvarConfiguracao(@Req() req: any, @Body() dto: SalvarConfiguracaoAgenteDto) {
+    return this.aiAgentService.salvarConfiguracaoAgente(this.clienteIdOuErro(req), dto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('configuracao/reset')
-  async resetarConfiguracao(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.resetarConfiguracaoAgente(barbeariaId);
+  @Get('documentos')
+  listarDocumentos(@Req() req: any) {
+    return this.aiAgentService.listarDocumentos(this.clienteIdOuErro(req));
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('historico')
-  async listarHistorico(@Req() req, @Query('limite') limite = 20) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    const valorLimite = Number(limite) || 20;
-    return this.aiAgentService.listarHistorico(barbeariaId, valorLimite);
+  @Post('documentos')
+  criarDocumento(@Req() req: any, @Body() dto: CriarDocumentoDto) {
+    return this.aiAgentService.criarDocumento(this.clienteIdOuErro(req), dto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('evolution/sessao')
-  async buscarSessaoEvolution(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.buscarSessaoEvolution(barbeariaId);
+  @Patch('documentos/:id')
+  atualizarDocumento(@Req() req: any, @Param('id') id: string, @Body() dto: AtualizarDocumentoDto) {
+    return this.aiAgentService.atualizarDocumento(id, this.clienteIdOuErro(req), dto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('evolution/sessao')
-  async criarSessaoEvolution(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    const sessao = await this.aiAgentService.buscarSessaoEvolution(barbeariaId).catch(() => undefined);
-    if (sessao) {
-      return sessao;
-    }
-    return this.aiAgentService.criarSessaoEvolution(barbeariaId);
+  @Delete('documentos/:id')
+  removerDocumento(@Req() req: any, @Param('id') id: string) {
+    return this.aiAgentService.removerDocumento(id, this.clienteIdOuErro(req));
   }
 
-  @Post('evolution/status')
-  async atualizarStatusEvolution(@Body() dto: AtualizarStatusEvolutionDto) {
-    return this.aiAgentService.atualizarStatusEvolutionViaToken(dto);
+  @Post('conversas')
+  criarConversa(@Body() dto: CriarConversaDto, @Req() req: Request) {
+    return this.aiAgentService.criarConversa(dto, this.identificadorOrigem(req));
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('evolution/status')
-  async obterStatusEvolution(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.obterStatusEvolution(barbeariaId);
+  @Post('conversas/renovar-token')
+  renovarToken(@Body() dto: RenovarTokenConversaDto, @Req() req: Request) {
+    return this.aiAgentService.renovarTokenConversa(dto, this.identificadorOrigem(req));
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('evolution/instancia')
-  async obterDetalhesInstancia(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.obterDetalhesInstancia(barbeariaId);
+  @Get('conversas/:id')
+  obterConversa(@Req() req: any, @Param('id') id: string) {
+    return this.aiAgentService.obterConversa(id, this.clienteIdOuErro(req));
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('evolution/instancia')
-  async removerInstanciaEvolution(@Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    return this.aiAgentService.removerInstanciaEvolution(barbeariaId);
+  @Patch('conversas/:id/dados-importantes')
+  atualizarDadosImportantes(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: AtualizarDadosImportantesDto,
+  ) {
+    return this.aiAgentService.atualizarDadosImportantes(id, this.clienteIdOuErro(req), dto);
   }
 
-  @Post('chat-externo')
-  async registrarChatExterno(@Body() dto: RegistrarChatExternoDto) {
-    this.validarTokenOuErro(dto.token);
-    return this.aiAgentService.registrarChatExterno(dto);
+  @UseGuards(JwtAuthGuard)
+  @Get('conversas/:id/mensagens')
+  listarMensagens(@Req() req: any, @Param('id') id: string) {
+    return this.aiAgentService.listarMensagensConversa(id, this.clienteIdOuErro(req));
   }
 
-  @Post('chat-externo-buscar')
-  async registrarChatExternoBuscarPorId(@Body() dto: BuscarChatExternoDto) {
-    this.validarTokenOuErro(dto.token);
-    return this.aiAgentService.BuscarChatExterno(dto);
+  @Post('mensagens')
+  criarMensagem(@Body() dto: CriarMensagemDto, @Req() req: Request) {
+    return this.aiAgentService.criarMensagem(dto, this.identificadorOrigem(req));
   }
 
-  @Post('chat-status')
-  async upsertChatStatus(@Body() dto: UpsertChatStatusDto) {
-    this.validarTokenOuErro(dto.token);
-    return this.aiAgentService.upsertChatStatus(dto);
+  @Post('conversas/:id/responder')
+  responderConversa(@Param('id') id: string, @Body() dto: ResponderConversaDto, @Req() req: Request) {
+    return this.aiAgentService.responderConversa(id, dto, this.identificadorOrigem(req));
   }
 
-  @Get('chat-status')
-  async obterChatStatus(@Query() dto: GetChatStatusDto) {
-    this.validarTokenOuErro(dto.token);
-    return this.aiAgentService.obterChatStatus(dto);
-  }
-
-  private barbeariaIdOuErro(req: any): string {
+  private clienteIdOuErro(req: any) {
     const usuario = req?.user;
-    if (!usuario || usuario.scope !== 'barbearia') {
-      throw new ForbiddenException('Apenas contas de barbearia podem acessar este recurso.');
-    }
-    if (!usuario.sub) {
-      throw new ForbiddenException('Identificador da barbearia nao encontrado no token.');
+    if (!usuario || usuario.scope !== 'cliente' || !usuario.sub) {
+      throw new ForbiddenException('Apenas contas de cliente podem acessar este recurso.');
     }
     return String(usuario.sub);
   }
 
-  private validarTokenOuErro(token?: string) {
-    const esperado = process.env.CLIENTES_WEBHOOK_TOKEN ?? '';
-    if (!token || !esperado || token !== esperado) {
-      throw new ForbiddenException('Token invalido para acessar o RAG.');
+  private identificadorOrigem(req: Request) {
+    const encaminhado = req.headers['x-forwarded-for'];
+    if (typeof encaminhado === 'string' && encaminhado.trim()) {
+      return encaminhado.split(',')[0].trim();
     }
+
+    if (Array.isArray(encaminhado) && encaminhado.length) {
+      return encaminhado[0];
+    }
+
+    return req.ip || req.socket?.remoteAddress || 'origem-desconhecida';
   }
 }

@@ -2,26 +2,32 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { DataSource } from 'typeorm';
 import OpenAI from 'openai';
 
-interface ResultadoBuscaConhecimento {
+interface ResultadoBuscaDocumento {
   id: string;
-  question: string;
-  answer: string;
-  metadata: Record<string, unknown> | null;
-  similarity: number;
+  titulo: string | null;
+  pergunta: string;
+  resposta: string;
+  conteudo: string;
+  metadados: Record<string, unknown> | null;
+  similaridade: number;
 }
 
-export interface DocumentoConhecimentoInput {
-  barbeariaId: string;
+export interface DocumentoInput {
+  clienteId: string;
+  titulo?: string | null;
   pergunta: string;
   resposta: string;
   ativo: boolean;
+  origem?: string | null;
   metadados?: Record<string, unknown> | null;
 }
 
-export interface DocumentoConhecimentoAtualizacao {
+export interface DocumentoAtualizacao {
+  titulo?: string | null;
   pergunta?: string;
   resposta?: string;
   ativo?: boolean;
+  origem?: string | null;
   metadados?: Record<string, unknown> | null;
 }
 
@@ -32,176 +38,137 @@ export class EmbeddingService {
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  constructor(private readonly dataSource: DataSource) {
-    if (!process.env.OPENAI_API_KEY) {
-      this.logger.warn('OPENAI_API_KEY não está configurada. A geração de embeddings irá falhar.');
-    }
-  }
+  constructor(private readonly dataSource: DataSource) {}
 
   async gerarEmbedding(texto: string): Promise<number[]> {
     try {
-      const limpo = texto.trim();
       const resposta = await this.client.embeddings.create({
         model: 'text-embedding-3-small',
-        input: limpo,
+        input: texto.trim(),
       });
       return resposta.data[0]?.embedding || [];
     } catch (error) {
       const err = error as Error;
       this.logger.error('Falha ao gerar embedding', err.stack);
-      throw new InternalServerErrorException('Não foi possível gerar o embedding.');
+      throw new InternalServerErrorException('Nao foi possivel gerar o embedding.');
     }
   }
 
-  async criarDocumento(input: DocumentoConhecimentoInput): Promise<string> {
+  async criarDocumento(input: DocumentoInput): Promise<string> {
     const conteudo = this.montarConteudo(input.pergunta, input.resposta);
-    const embedding = await this.gerarEmbedding(conteudo);
-    const vetor = this.converterParaVetor(embedding);
+    const vetorEmbedding = this.converterParaVetor(await this.gerarEmbedding(conteudo));
 
     const linhas = await this.dataSource.query(
-      `INSERT INTO documents (
-         barbearia_id,
-         question,
-         answer,
-         status,
-         content,
-         metadata,
-         embedding
+      `INSERT INTO documentos (
+         cliente_id,
+         titulo,
+         pergunta,
+         resposta,
+         conteudo,
+         metadados,
+         vetor_embedding,
+         ativo,
+         origem
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7::vector)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8, $9)
        RETURNING id`,
       [
-        input.barbeariaId,
+        input.clienteId,
+        input.titulo ?? null,
         input.pergunta,
         input.resposta,
-        input.ativo,
         conteudo,
         input.metadados ?? null,
-        vetor,
+        vetorEmbedding,
+        input.ativo,
+        input.origem ?? null,
       ],
     );
 
-    return linhas[0]?.id;
+    return String(linhas[0]?.id);
   }
 
-  async atualizarDocumento(
-    id: string,
-    barbeariaId: string,
-    atualizacao: DocumentoConhecimentoAtualizacao,
-  ): Promise<void> {
-    const campos: string[] = [];
-    const valores: unknown[] = [];
-
-    let precisaNovoEmbedding = false;
-    let proximaPergunta: string | undefined;
-    let proximaResposta: string | undefined;
-
-    if (atualizacao.pergunta !== undefined) {
-      campos.push(`question = $${campos.length + 1}`);
-      valores.push(atualizacao.pergunta);
-      precisaNovoEmbedding = true;
-      proximaPergunta = atualizacao.pergunta;
+  async atualizarDocumento(id: string, clienteId: string, atualizacao: DocumentoAtualizacao): Promise<void> {
+    const atual = await this.buscarDocumentoBruto(id, clienteId);
+    if (!atual) {
+      throw new InternalServerErrorException('Documento nao encontrado.');
     }
 
-    if (atualizacao.resposta !== undefined) {
-      campos.push(`answer = $${campos.length + 1}`);
-      valores.push(atualizacao.resposta);
-      precisaNovoEmbedding = true;
-      proximaResposta = atualizacao.resposta;
-    }
-
-    if (atualizacao.ativo !== undefined) {
-      campos.push(`status = $${campos.length + 1}`);
-      valores.push(atualizacao.ativo);
-    }
-
-    if (atualizacao.metadados !== undefined) {
-      campos.push(`metadata = $${campos.length + 1}`);
-      valores.push(atualizacao.metadados ?? null);
-    }
-
-    if (precisaNovoEmbedding) {
-      const [linhaAtual] = await this.dataSource.query(
-        `SELECT question, answer
-         FROM documents
-         WHERE id = $1 AND barbearia_id = $2`,
-        [id, barbeariaId],
-      );
-
-      if (!linhaAtual) {
-        throw new InternalServerErrorException('Documento de conhecimento não encontrado.');
-      }
-
-      const pergunta = proximaPergunta ?? linhaAtual.question;
-      const resposta = proximaResposta ?? linhaAtual.answer;
-      const conteudo = this.montarConteudo(pergunta, resposta);
-      const embedding = await this.gerarEmbedding(conteudo);
-      const vetor = this.converterParaVetor(embedding);
-
-      campos.push(`content = $${campos.length + 1}`);
-      valores.push(conteudo);
-      campos.push(`embedding = $${campos.length + 1}::vector`);
-      valores.push(vetor);
-    }
-
-    if (!campos.length) {
-      return;
-    }
-
-    valores.push(id, barbeariaId);
+    const pergunta = atualizacao.pergunta ?? atual.pergunta;
+    const resposta = atualizacao.resposta ?? atual.resposta;
+    const conteudo = this.montarConteudo(pergunta, resposta);
+    const vetorEmbedding = this.converterParaVetor(await this.gerarEmbedding(conteudo));
 
     await this.dataSource.query(
-      `UPDATE documents
-       SET ${campos.join(', ')}
-       WHERE id = $${campos.length + 1} AND barbearia_id = $${campos.length + 2}`,
-      valores,
+      `UPDATE documentos
+       SET titulo = $1,
+           pergunta = $2,
+           resposta = $3,
+           conteudo = $4,
+           metadados = $5,
+           vetor_embedding = $6::vector,
+           ativo = $7,
+           origem = $8,
+           atualizado_em = now()
+       WHERE id = $9 AND cliente_id = $10`,
+      [
+        atualizacao.titulo ?? atual.titulo,
+        pergunta,
+        resposta,
+        conteudo,
+        atualizacao.metadados !== undefined ? atualizacao.metadados : atual.metadados,
+        vetorEmbedding,
+        atualizacao.ativo ?? atual.ativo,
+        atualizacao.origem !== undefined ? atualizacao.origem : atual.origem,
+        id,
+        clienteId,
+      ],
     );
   }
 
-  async excluirDocumento(id: string, barbeariaId: string): Promise<void> {
-    await this.dataSource.query(
-      `DELETE FROM documents WHERE id = $1 AND barbearia_id = $2`,
-      [id, barbeariaId],
-    );
+  async excluirDocumento(id: string, clienteId: string): Promise<void> {
+    await this.dataSource.query('DELETE FROM documentos WHERE id = $1 AND cliente_id = $2', [id, clienteId]);
   }
 
-  async buscarDocumentos(
-    pergunta: string,
-    barbeariaId: string,
-    limite = 3,
-  ): Promise<ResultadoBuscaConhecimento[]> {
-    const embedding = await this.gerarEmbedding(pergunta);
-    const vetor = this.converterParaVetor(embedding);
-
+  async buscarDocumentos(consulta: string, clienteId: string, limite = 3): Promise<ResultadoBuscaDocumento[]> {
+    const vetorEmbedding = this.converterParaVetor(await this.gerarEmbedding(consulta));
     const linhas = await this.dataSource.query(
       `SELECT id,
-              question,
-              answer,
-              metadata,
-              1 - (embedding <=> $1::vector) AS similarity
-       FROM documents
-       WHERE barbearia_id = $2
-         AND status IS TRUE
-       ORDER BY embedding <=> $1::vector
+              titulo,
+              pergunta,
+              resposta,
+              conteudo,
+              metadados,
+              1 - (vetor_embedding <=> $1::vector) AS similaridade
+       FROM documentos
+       WHERE cliente_id = $2
+         AND ativo IS TRUE
+       ORDER BY vetor_embedding <=> $1::vector
        LIMIT $3`,
-      [vetor, barbeariaId, limite],
+      [vetorEmbedding, clienteId, limite],
     );
 
-    return linhas as ResultadoBuscaConhecimento[];
+    return linhas as ResultadoBuscaDocumento[];
   }
 
-  private montarConteudo(pergunta?: string, resposta?: string) {
-    const perguntaLimpa = (pergunta ?? '').trim();
-    const respostaLimpa = (resposta ?? '').trim();
-    return `Pergunta: ${perguntaLimpa}\nResposta: ${respostaLimpa}`;
+  private async buscarDocumentoBruto(id: string, clienteId: string) {
+    const [linha] = await this.dataSource.query(
+      `SELECT id, titulo, pergunta, resposta, conteudo, metadados, ativo, origem
+       FROM documentos
+       WHERE id = $1 AND cliente_id = $2`,
+      [id, clienteId],
+    );
+    return linha;
   }
 
-  private converterParaVetor(vetor: number[]): string {
+  private montarConteudo(pergunta: string, resposta: string) {
+    return `Pergunta: ${pergunta.trim()}\nResposta: ${resposta.trim()}`;
+  }
+
+  private converterParaVetor(vetor: number[]) {
     if (!Array.isArray(vetor) || vetor.length === 0) {
-      throw new InternalServerErrorException('Embedding retornou um vetor vazio.');
+      throw new InternalServerErrorException('Embedding retornou vetor vazio.');
     }
-
-    const formatado = vetor.map((valor) => (Number.isFinite(valor) ? valor : 0));
-    return `[${formatado.join(',')}]`;
+    return `[${vetor.map((valor) => (Number.isFinite(valor) ? valor : 0)).join(',')}]`;
   }
 }

@@ -1,13 +1,10 @@
-import { IsDateString, IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
 
 export class UpdateClienteDto {
   @IsOptional()
   @IsString()
+  @Length(1, 150)
   nome?: string;
-
-  @IsOptional()
-  @IsString()
-  telefone?: string;
 
   @IsOptional()
   @IsEmail()
@@ -15,14 +12,21 @@ export class UpdateClienteDto {
 
   @IsOptional()
   @IsString()
-  cpf?: string;
-
-
-  @IsOptional()
-  @IsDateString()
-  dataCadastro?: string;
+  @Length(0, 20)
+  telefone?: string;
 
   @IsOptional()
-  @IsDateString()
-  dataAniversario?: string;
+  @IsString()
+  @Length(0, 20)
+  cpfCnpj?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 30)
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 30)
+  plano?: string;
 }

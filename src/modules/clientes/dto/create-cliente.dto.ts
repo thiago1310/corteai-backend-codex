@@ -1,26 +1,34 @@
-import { IsDateString, IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
 
 export class CreateClienteDto {
-  @IsOptional()
   @IsString()
-  nome?: string;
+  @Length(1, 150)
+  nome!: string;
 
-  @IsString()
-  telefone!: string;
-
-  @IsOptional()
   @IsEmail()
-  email?: string;
+  email!: string;
+
+  @IsString()
+  @Length(6, 255)
+  senha!: string;
 
   @IsOptional()
   @IsString()
-  cpf?: string;
+  @Length(0, 20)
+  telefone?: string;
 
   @IsOptional()
-  @IsDateString()
-  dataCadastro?: string;
+  @IsString()
+  @Length(0, 20)
+  cpfCnpj?: string;
 
   @IsOptional()
-  @IsDateString()
-  dataAniversario?: string;
+  @IsString()
+  @Length(0, 30)
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 30)
+  plano?: string;
 }

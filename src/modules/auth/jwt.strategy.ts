@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 export interface JwtPayload {
   sub: string;
   email: string;
-  scope: 'usuario' | 'barbearia';
+  scope: 'cliente';
 }
 
 @Injectable()
@@ -25,4 +25,3 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return payload;
   }
 }
-

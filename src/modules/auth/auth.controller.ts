@@ -1,9 +1,8 @@
 import { Body, Controller, Patch, Post } from '@nestjs/common';
 import { IsIn, IsString, MinLength } from 'class-validator';
 import { AuthService, ChangePasswordDto, LoginDto, PasswordChangeScope } from './auth.service';
-import { UsuariosService, CreateUsuarioDto } from '../usuarios/usuarios.service';
-import { BarbeariasService } from '../barbearias/barbearias.service';
-import { CreateBarbeariaDTO } from '../barbearias/barbearia.dto';
+import { ClientesService } from '../clientes/clientes.service';
+import { CreateClienteDto } from '../clientes/dto/create-cliente.dto';
 
 class ChangePasswordBody implements ChangePasswordDto {
   @IsString()
@@ -17,7 +16,7 @@ class ChangePasswordBody implements ChangePasswordDto {
   @MinLength(6)
   novaSenha!: string;
 
-  @IsIn(['barbearia', 'profissional'])
+  @IsIn(['cliente'])
   scope!: PasswordChangeScope;
 }
 
@@ -25,8 +24,7 @@ class ChangePasswordBody implements ChangePasswordDto {
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
-    private readonly usuarios: UsuariosService,
-    private readonly barbearias: BarbeariasService,
+    private readonly clientes: ClientesService,
   ) {}
 
   @Post('login')
@@ -34,14 +32,9 @@ export class AuthController {
     return this.auth.login(body);
   }
 
-  @Post('register/usuario')
-  registerUsuario(@Body() body: CreateUsuarioDto) {
-    return this.usuarios.create(body);
-  }
-
-  @Post('register/barbearia')
-  registerBarbearia(@Body() body: CreateBarbeariaDTO) {
-    return this.barbearias.create(body);
+  @Post('register/cliente')
+  registerCliente(@Body() body: CreateClienteDto) {
+    return this.clientes.create(body);
   }
 
   @Patch('password')

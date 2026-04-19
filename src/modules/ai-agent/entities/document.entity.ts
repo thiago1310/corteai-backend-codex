@@ -1,31 +1,46 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Entity({ name: 'documents' })
-export class DocumentEntity {
+@Entity({ name: 'documentos' })
+export class DocumentoEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id!: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'now()' })
-  createdAt!: Date;
+  @Column({ name: 'cliente_id', type: 'uuid' })
+  clienteId!: string;
 
-  @Column({ name: 'barbearia_id', type: 'uuid' })
-  barbeariaId!: string;
-
-  @Column({ name: 'question', type: 'text' })
-  pergunta!: string;
-
-  @Column({ name: 'answer', type: 'text' })
-  resposta!: string;
-
-  @Column({ name: 'status', type: 'boolean', default: true })
-  ativo!: boolean;
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  titulo?: string | null;
 
   @Column({ type: 'text' })
-  content!: string;
+  pergunta!: string;
+
+  @Column({ type: 'text' })
+  resposta!: string;
+
+  @Column({ type: 'text' })
+  conteudo!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata?: Record<string, unknown> | null;
+  metadados?: Record<string, unknown> | null;
 
-  @Column({ type: 'vector' as any })
-  embedding!: number[];
+  @Column({ type: 'vector' as any, name: 'vetor_embedding' })
+  vetorEmbedding!: number[];
+
+  @Column({ type: 'boolean', default: true })
+  ativo!: boolean;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  origem?: string | null;
+
+  @CreateDateColumn({ name: 'criado_em', type: 'timestamp', default: () => 'now()' })
+  criadoEm!: Date;
+
+  @UpdateDateColumn({ name: 'atualizado_em', type: 'timestamp', default: () => 'now()' })
+  atualizadoEm!: Date;
 }

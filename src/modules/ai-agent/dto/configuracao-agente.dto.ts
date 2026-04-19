@@ -1,20 +1,29 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class SalvarConfiguracaoAgenteDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(150)
-  nomeAgente!: string;
+  nomeAgente?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  promptSistema!: string;
-}
+  mensagemBoasVindas?: string;
 
-export class ConfiguracaoAgenteDto {
-  id!: string;
-  barbeariaId!: string;
-  nomeAgente!: string;
-  promptSistema!: string;
-  atualizadoEm!: Date;
+  @IsOptional()
+  @IsString()
+  promptSistema?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  tomResposta?: string;
+
+  @IsOptional()
+  @IsString()
+  instrucoesExtras?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  ativo?: boolean;
 }

@@ -4,9 +4,6 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
-import { UsuariosModule } from './modules/usuarios/usuarios.module';
-import { BarbeariasModule } from './modules/barbearias/barbearias.module';
-import { ProfissionaisModule } from './modules/profissionais/profissionais.module';
 import databaseConfig from './modules/config/database.config';
 import { AiAgentModule } from './modules/ai-agent/ai-agent.module';
 import { ClientesModule } from './modules/clientes/clientes.module';
@@ -16,9 +13,6 @@ import { ClientesModule } from './modules/clientes/clientes.module';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot(databaseConfig()),
     AuthModule,
-    UsuariosModule,
-    BarbeariasModule,
-    ProfissionaisModule,
     AiAgentModule,
     ClientesModule,
   ],
