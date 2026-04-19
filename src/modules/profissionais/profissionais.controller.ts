@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Req,
   UseGuards,
   UsePipes,
@@ -17,7 +16,6 @@ import { ProfissionaisService } from './profissionais.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateProfissionalDto } from './dto/create-profissional.dto';
 import { UpdateProfissionalDto } from './dto/update-profissional.dto';
-import { MetricasProfissionalDto } from './dto/metricas-profissional.dto';
 
 @Controller('profissionais')
 @UseGuards(JwtAuthGuard)
@@ -47,14 +45,6 @@ export class ProfissionaisController {
   create(@Req() req, @Body() body: CreateProfissionalDto) {
     const barbeariaId = this.barbeariaIdOuErro(req);
     return this.service.create(barbeariaId, body);
-  }
-
-  @Get(':id/metricas')
-  metricas(@Param('id') id: string, @Query() query: MetricasProfissionalDto, @Req() req) {
-    const barbeariaId = this.barbeariaIdOuErro(req);
-    const inicio = query.inicio ? new Date(query.inicio) : undefined;
-    const fim = query.fim ? new Date(query.fim) : undefined;
-    return this.service.metricas(id, barbeariaId, inicio, fim);
   }
 
   @Patch(':id')

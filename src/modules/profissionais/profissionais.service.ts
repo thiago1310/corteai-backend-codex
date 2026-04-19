@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { InjectEntityManager } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 
@@ -20,7 +20,6 @@ import {
   HorarioFuncionamento,
   DiaSemana,
 } from '../barbearias/horario-funcionamento.entity';
-import { Servico } from '../servicos/servicos.entity';
 
 @Injectable()
 export class ProfissionaisService {
@@ -38,7 +37,6 @@ export class ProfissionaisService {
     this.ensureHorariosValid(data.horarios, barbearia.horarios);
 
     const senhaHash = data.senha ? await bcrypt.hash(data.senha, 10) : undefined;
-    const servicos = await this.loadServicos(data.servicosIds, barbeariaId);
 
     const entity = this.repo.create({
       nome: data.nome,
@@ -48,7 +46,6 @@ export class ProfissionaisService {
       salarioBase: data.salarioBase ?? 0,
       barbearia,
       senha: senhaHash,
-      servicos,
     });
 
     const saved = await this.repo.save(entity);
@@ -59,51 +56,13 @@ export class ProfissionaisService {
   findAll(barbeariaId: string) {
     return this.repo.find({
       where: { barbearia: { id: barbeariaId } },
-      relations: ['barbearia', 'horarios', 'servicos'],
+      relations: ['barbearia', 'horarios'],
       order: { nome: 'ASC' },
     });
   }
 
   findOne(id: string, barbeariaId: string) {
     return this.getDetalhe(id, barbeariaId);
-  }
-
-  async metricas(id: string, barbeariaId: string, inicio?: Date, fim?: Date) {
-    const profissional = await this.findOwnedOrThrow(id, barbeariaId);
-    const qb = this.em
-      .getRepository('agendamentos')
-      .createQueryBuilder('ag')
-      .leftJoinAndSelect('ag.itens', 'item')
-      .leftJoin('ag.barbearia', 'barbearia')
-      .where('ag.profissionalId = :id', { id })
-      .andWhere('barbearia.id = :barbeariaId', { barbeariaId })
-      .andWhere('ag.status = :status', { status: 'FINALIZADO' });
-
-    if (inicio) {
-      qb.andWhere('ag.dataInicio >= :inicio', { inicio });
-    }
-    if (fim) {
-      qb.andWhere('ag.dataInicio <= :fim', { fim });
-    }
-
-    const ags = await qb.getMany();
-    const atendimentos = ags.length;
-    const receita = ags.reduce((acc, ag) => acc + this.calcularTotalItens(ag as any), 0);
-    const comissao =
-      ags.reduce((acc, ag) => {
-        const itens = (ag as any).itens ?? [];
-        const parcial = itens.reduce((s: number, item: any) => {
-          const base = Number(item.valorUnitario ?? 0);
-          const desconto = Number(item.descontoValor ?? 0);
-          const taxa = Number(item.taxaValor ?? 0);
-          const subtotal = (base - desconto + taxa) * (item.quantidade ?? 1);
-          const pct = item.comissaoPercentual ?? profissional.comissao ?? 0;
-          return s + subtotal * (pct / 100);
-        }, 0);
-        return acc + parcial;
-      }, 0);
-
-    return { atendimentos, receita, comissao, salarioBase: profissional.salarioBase };
   }
 
   async update(id: string, barbeariaId: string, data: UpdateProfissionalDto) {
@@ -116,10 +75,6 @@ export class ProfissionaisService {
     if (data.horarios) {
       const barbearia = await this.ensureBarbearia(barbeariaId);
       this.ensureHorariosValid(data.horarios, barbearia.horarios);
-    }
-
-    if (data.servicosIds) {
-      profissional.servicos = await this.loadServicos(data.servicosIds, barbeariaId);
     }
 
     if (data.nome !== undefined) {
@@ -180,7 +135,7 @@ export class ProfissionaisService {
   private async getDetalhe(id: string, barbeariaId: string) {
     const profissional = await this.repo.findOne({
       where: { id, barbearia: { id: barbeariaId } },
-      relations: ['barbearia', 'horarios', 'servicos'],
+      relations: ['barbearia', 'horarios'],
     });
     if (!profissional) {
       throw new NotFoundException('Profissional nao encontrado.');
@@ -324,29 +279,4 @@ export class ProfissionaisService {
     await this.horariosRepo.save(entities);
   }
 
-  private async loadServicos(ids: string[] | undefined, barbeariaId: string) {
-    if (!ids?.length) {
-      return [];
-    }
-
-    const servicos = await this.em.find(Servico, {
-      where: { id: In(ids), barbearia: { id: barbeariaId } },
-    });
-
-    if (servicos.length !== ids.length) {
-      throw new NotFoundException('Um ou mais servicos nao foram encontrados.');
-    }
-
-    return servicos;
-  }
-
-  private calcularTotalItens(agendamento: { itens?: any[] }) {
-    return (agendamento.itens ?? []).reduce((acc, item) => {
-      const base = Number(item.valorUnitario ?? 0);
-      const desconto = Number(item.descontoValor ?? 0);
-      const taxa = Number(item.taxaValor ?? 0);
-      const qtd = item.quantidade ?? 1;
-      return acc + (base - desconto + taxa) * qtd;
-    }, 0);
-  }
 }

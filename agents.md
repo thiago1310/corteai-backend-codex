@@ -126,7 +126,7 @@ Principais scripts (`package.json`):
 - `npm run test` / `test:e2e` – Jest.
 - `npm run lint` – ESLint.
 
-### Passos tipicos para um novo agente
+### Passos tipicos para um novo modulo
 1. Copiar estrutura basica do modulo (controller, service, module, dto, entities).
 2. Registrar o modulo em `app.module.ts`.
 3. Criar endpoints e DTOs seguindo padrao de validacao.

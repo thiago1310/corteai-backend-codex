@@ -6,7 +6,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -52,9 +51,4 @@ export class CreateProfissionalDto {
   @ValidateNested({ each: true })
   @Type(() => ProfissionalHorarioItemDto)
   horarios!: ProfissionalHorarioItemDto[];
-
-  @IsOptional()
-  @IsArray()
-  @IsUUID('all', { each: true })
-  servicosIds?: string[];
 }

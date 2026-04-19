@@ -3,11 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  OneToMany,
   Index,
 } from 'typeorm';
 import { BarbeariaEntity } from '../barbearias/barbearias.entity';
-import { Agendamento } from '../agendamentos/agendamentos.entity';
 
 export enum UsuarioTipo {
   CLIENTE = 'CLIENTE',
@@ -44,7 +42,4 @@ export class Usuario {
 
   @ManyToOne(() => BarbeariaEntity, (b) => b.funcionarios, { nullable: true })
   barbearia?: BarbeariaEntity | null;
-
-  @OneToMany(() => Agendamento, (a) => a.usuario)
-  agendamentos!: Agendamento[];
 }
