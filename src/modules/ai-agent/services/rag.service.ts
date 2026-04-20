@@ -19,6 +19,8 @@ interface RespostaRag {
   }>;
 }
 
+type DadosImportantes = Record<string, unknown> | null;
+
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name);
@@ -106,6 +108,83 @@ export class RagService {
       const err = error as Error;
       this.logger.error('Falha ao gerar resposta do RAG', err.stack);
       throw new InternalServerErrorException('Nao foi possivel gerar uma resposta.');
+    }
+  }
+
+  async extrairDadosImportantes(
+    historico: MensagemHistorico[],
+    dadosImportantesAtuais?: DadosImportantes,
+  ): Promise<DadosImportantes> {
+    const historicoFormatado = historico
+      .map((item) => `${item.papel}: ${item.mensagem}`)
+      .join('\n');
+
+    const memoriaAtual = dadosImportantesAtuais ? JSON.stringify(dadosImportantesAtuais, null, 2) : '{}';
+
+    const promptSistema = [
+      'Voce extrai memoria util de uma conversa de atendimento.',
+      'Retorne apenas JSON valido, sem markdown, sem comentarios e sem texto adicional.',
+      'Inclua somente fatos relevantes e relativamente estaveis sobre o usuario ou o atendimento.',
+      'Exemplos: nome, telefone, email, cidade, empresa, produto_interesse, servico_interesse, objetivo, preferencias, restricoes, observacoes.',
+      'Se nao houver nada relevante para salvar, retorne {}.',
+    ].join('\n');
+
+    const promptUsuario = [
+      'Memoria atual da conversa:',
+      memoriaAtual,
+      '',
+      'Historico da conversa:',
+      historicoFormatado || 'Nenhum historico encontrado.',
+      '',
+      'Atualize a memoria com base apenas no que estiver explicito ou altamente inferivel na conversa.',
+      'Nao invente dados.',
+      'Retorne somente um objeto JSON.',
+    ].join('\n');
+
+    try {
+      const completion = await this.client.chat.completions.create({
+        model: process.env.RAG_MODELO_RESPOSTA || 'gpt-4o-mini',
+        temperature: 0,
+        messages: [
+          { role: 'system', content: promptSistema },
+          { role: 'user', content: promptUsuario },
+        ],
+      });
+
+      const conteudo = completion.choices[0]?.message?.content?.trim();
+      if (!conteudo) {
+        return null;
+      }
+
+      const json = this.extrairJson(conteudo);
+      if (!json || Array.isArray(json) || typeof json !== 'object') {
+        return null;
+      }
+
+      return json as Record<string, unknown>;
+    } catch (error) {
+      const err = error as Error;
+      this.logger.warn(`Falha ao extrair dados importantes: ${err.message}`);
+      return null;
+    }
+  }
+
+  private extrairJson(conteudo: string): unknown {
+    try {
+      return JSON.parse(conteudo);
+    } catch {
+      const inicio = conteudo.indexOf('{');
+      const fim = conteudo.lastIndexOf('}');
+
+      if (inicio === -1 || fim === -1 || fim <= inicio) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(conteudo.slice(inicio, fim + 1));
+      } catch {
+        return null;
+      }
     }
   }
 }

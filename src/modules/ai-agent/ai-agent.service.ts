@@ -155,7 +155,7 @@ export class AiAgentService {
       throw new ForbiddenException('Token da conversa nao corresponde ao identificador informado.');
     }
 
-    await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
+    const conversa = await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
     const configuracao = await this.garantirConfiguracao(payload.clienteId);
     const mensagens = await this.mensagemRepo.find({
       where: { conversaId: payload.conversaId, clienteId: payload.clienteId },
@@ -188,9 +188,25 @@ export class AiAgentService {
       }),
     );
 
+    const dadosImportantesExtraidos = await this.ragService.extrairDadosImportantes(
+      mensagens
+        .concat(mensagemAssistente)
+        .map((item) => ({ papel: item.papel, mensagem: item.mensagem })),
+      conversa.dadosImportantes ?? null,
+    );
+
+    if (dadosImportantesExtraidos) {
+      conversa.dadosImportantes = this.mesclarDadosImportantes(
+        conversa.dadosImportantes ?? null,
+        dadosImportantesExtraidos,
+      );
+      await this.conversaRepo.save(conversa);
+    }
+
     return {
       mensagem: this.mapearMensagem(mensagemAssistente),
       contextos: respostaRag.contextos,
+      dadosImportantes: conversa.dadosImportantes ?? null,
     };
   }
 
@@ -278,6 +294,20 @@ export class AiAgentService {
       );
       throw error;
     }
+  }
+
+  private mesclarDadosImportantes(
+    atuais: Record<string, unknown> | null,
+    extraidos: Record<string, unknown> | null,
+  ): Record<string, unknown> | null {
+    if (!extraidos) {
+      return atuais;
+    }
+
+    return {
+      ...(atuais ?? {}),
+      ...extraidos,
+    };
   }
 
   private mapearMensagem(mensagem: MensagemEntity) {
