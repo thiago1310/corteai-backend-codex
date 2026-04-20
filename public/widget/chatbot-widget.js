@@ -479,7 +479,6 @@
     }
 
     this.clearDebounce();
-    this.setStatus('Aguardando 3 segundos sem digitacao para responder...');
     var self = this;
     this.state.debounceTimer = setTimeout(function () {
       self.state.debounceTimer = null;

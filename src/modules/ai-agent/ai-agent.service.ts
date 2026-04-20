@@ -325,16 +325,42 @@ export class AiAgentService {
   }
 
   private validarLimiteMensagem(clienteId: string, conversaId: string, identificadorOrigem: string) {
-    const limite = Number(process.env.LIMITE_MENSAGENS_POR_MINUTO || 60);
-    const chave = `mensagem:${clienteId}:${conversaId}:${identificadorOrigem}`;
+    const limites = [
+      {
+        chave: `mensagem:conversa:minuto:${clienteId}:${conversaId}`,
+        limite: Number(process.env.LIMITE_MENSAGENS_CONVERSA_POR_MINUTO || 30),
+        janelaMs: 60_000,
+        descricao: 'por minuto da conversa',
+      },
+      {
+        chave: `mensagem:conversa:hora:${clienteId}:${conversaId}`,
+        limite: Number(process.env.LIMITE_MENSAGENS_CONVERSA_POR_HORA || 300),
+        janelaMs: 60 * 60 * 1000,
+        descricao: 'por hora da conversa',
+      },
+      {
+        chave: `mensagem:conversa:dia:${clienteId}:${conversaId}`,
+        limite: Number(process.env.LIMITE_MENSAGENS_CONVERSA_POR_DIA || 400),
+        janelaMs: 24 * 60 * 60 * 1000,
+        descricao: 'por dia da conversa',
+      },
+      {
+        chave: `mensagem:cliente:dia:${clienteId}`,
+        limite: Number(process.env.LIMITE_MENSAGENS_CLIENTE_POR_DIA || 3000),
+        janelaMs: 24 * 60 * 60 * 1000,
+        descricao: 'por dia do cliente',
+      },
+    ];
 
-    try {
-      this.limiteRequisicoesService.verificarOuFalhar(chave, limite, 60_000);
-    } catch (error) {
-      this.logger.warn(
-        `Limite excedido no envio de mensagem para cliente ${clienteId} conversa ${conversaId} via ${identificadorOrigem}`,
-      );
-      throw error;
+    for (const item of limites) {
+      try {
+        this.limiteRequisicoesService.verificarOuFalhar(item.chave, item.limite, item.janelaMs);
+      } catch (error) {
+        this.logger.warn(
+          `Limite excedido no envio de mensagem ${item.descricao} para cliente ${clienteId} conversa ${conversaId} via ${identificadorOrigem}`,
+        );
+        throw error;
+      }
     }
   }
 
