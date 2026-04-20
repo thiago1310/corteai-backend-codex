@@ -82,6 +82,16 @@ export class AiAgentService {
 
   async criarConversa(dto: CriarConversaDto, identificadorOrigem: string) {
     await this.garantirCliente(dto.clienteId);
+    const configuracao = await this.garantirConfiguracao(dto.clienteId);
+
+    if (!configuracao.ativo) {
+      return {
+        ativo: false,
+        nomeAgente: configuracao.nomeAgente,
+        mensagemBoasVindas: null,
+      };
+    }
+
     this.validarLimiteCriacaoConversa(dto.clienteId, identificadorOrigem);
 
     const conversa = await this.conversaRepo.save(
@@ -93,10 +103,11 @@ export class AiAgentService {
         origem: 'widget',
       }),
     );
-    const configuracao = await this.garantirConfiguracao(dto.clienteId);
     return {
+      ativo: true,
       conversaId: conversa.id,
       tokenConversa: await this.gerarTokenConversa(conversa.id, dto.clienteId),
+      nomeAgente: configuracao.nomeAgente,
       mensagemBoasVindas: configuracao.mensagemBoasVindas ?? DEFAULT_WELCOME_MESSAGE,
     };
   }
@@ -104,8 +115,20 @@ export class AiAgentService {
   async renovarTokenConversa(dto: RenovarTokenConversaDto, _identificadorOrigem?: string) {
     const payload = await this.validarTokenConversa(dto.tokenConversa);
     const conversa = await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
+    const configuracao = await this.garantirConfiguracao(conversa.clienteId);
+
+    if (!configuracao.ativo) {
+      return {
+        ativo: false,
+        nomeAgente: configuracao.nomeAgente,
+        historico: [],
+      };
+    }
+
     return {
+      ativo: true,
       tokenConversa: await this.gerarTokenConversa(conversa.id, conversa.clienteId),
+      nomeAgente: configuracao.nomeAgente,
       historico: await this.listarMensagensConversa(conversa.id, conversa.clienteId),
     };
   }
@@ -123,6 +146,7 @@ export class AiAgentService {
   async criarMensagem(dto: CriarMensagemDto, identificadorOrigem: string) {
     const payload = await this.validarTokenConversa(dto.tokenConversa);
     await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
+    await this.validarAgenteAtivo(payload.clienteId);
     this.validarLimiteMensagem(payload.clienteId, payload.conversaId, identificadorOrigem);
 
     const mensagem = this.mensagemRepo.create({
@@ -157,6 +181,11 @@ export class AiAgentService {
 
     const conversa = await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
     const configuracao = await this.garantirConfiguracao(payload.clienteId);
+
+    if (!configuracao.ativo) {
+      throw new ForbiddenException('O agente esta inativo para este cliente.');
+    }
+
     const mensagens = await this.mensagemRepo.find({
       where: { conversaId: payload.conversaId, clienteId: payload.clienteId },
       order: { criadoEm: 'ASC' },
@@ -173,24 +202,29 @@ export class AiAgentService {
       dto.instrucaoExtra,
     );
 
-    const mensagemAssistente = await this.mensagemRepo.save(
-      this.mensagemRepo.create({
-        clienteId: payload.clienteId,
-        conversaId: payload.conversaId,
-        papel: 'assistente',
-        mensagem: respostaRag.resposta,
-        status: 'respondida',
-        metadados: {
-          origem: 'fluxo_interno_responder',
-          ip: identificadorOrigem ?? null,
-          contextos: respostaRag.contextos,
-        },
-      }),
+    const paragrafosResposta = this.quebrarRespostaEmMensagens(respostaRag.resposta);
+    const mensagensAssistente = await this.mensagemRepo.save(
+      paragrafosResposta.map((paragrafo, indice) =>
+        this.mensagemRepo.create({
+          clienteId: payload.clienteId,
+          conversaId: payload.conversaId,
+          papel: 'assistente',
+          mensagem: paragrafo,
+          status: 'respondida',
+          metadados: {
+            origem: 'fluxo_interno_responder',
+            ip: identificadorOrigem ?? null,
+            contextos: respostaRag.contextos,
+            indiceParagrafo: indice,
+            totalParagrafos: paragrafosResposta.length,
+          },
+        }),
+      ),
     );
 
     const dadosImportantesExtraidos = await this.ragService.extrairDadosImportantes(
       mensagens
-        .concat(mensagemAssistente)
+        .concat(mensagensAssistente)
         .map((item) => ({ papel: item.papel, mensagem: item.mensagem })),
       conversa.dadosImportantes ?? null,
     );
@@ -204,7 +238,7 @@ export class AiAgentService {
     }
 
     return {
-      mensagem: this.mapearMensagem(mensagemAssistente),
+      mensagens: mensagensAssistente.map((item) => this.mapearMensagem(item)),
       contextos: respostaRag.contextos,
       dadosImportantes: conversa.dadosImportantes ?? null,
     };
@@ -237,6 +271,14 @@ export class AiAgentService {
           ativo: true,
         }),
       );
+    }
+    return configuracao;
+  }
+
+  private async validarAgenteAtivo(clienteId: string) {
+    const configuracao = await this.garantirConfiguracao(clienteId);
+    if (!configuracao.ativo) {
+      throw new ForbiddenException('O agente esta inativo para este cliente.');
     }
     return configuracao;
   }
@@ -308,6 +350,15 @@ export class AiAgentService {
       ...(atuais ?? {}),
       ...extraidos,
     };
+  }
+
+  private quebrarRespostaEmMensagens(resposta: string) {
+    const paragrafos = resposta
+      .split(/\n\s*\n+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return paragrafos.length ? paragrafos : [resposta.trim()];
   }
 
   private mapearMensagem(mensagem: MensagemEntity) {

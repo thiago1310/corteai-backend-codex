@@ -1,12 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { json, urlencoded } from 'express';
+import { json, static as expressStatic, urlencoded } from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const server = app.getHttpAdapter().getInstance();
   app.use(json({ limit: '30mb' }));
   app.use(urlencoded({ limit: '30mb', extended: true }));
+  app.use('/widget', expressStatic(join(process.cwd(), 'public', 'widget')));
+  server.get('/chatbot-teste.html', (_req: unknown, res: { sendFile: (path: string) => void }) => {
+    res.sendFile(join(process.cwd(), 'chatbot-teste.html'));
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({
     origin: true,

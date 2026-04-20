@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teste do Chatbot RAG</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f7f6;
+        --card: #ffffff;
+        --border: #d9e4e0;
+        --text: #19322c;
+        --muted: #60756d;
+        --accent: #1f7a5a;
+        --accent-dark: #164c3a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Segoe UI, Arial, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(31, 122, 90, 0.12), transparent 30%),
+          linear-gradient(180deg, #f8fbfa 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 20px 120px;
+      }
+
+      .hero h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 4vw, 46px);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        max-width: 740px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .grid {
+        margin-top: 28px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 16px 40px rgba(16, 39, 34, 0.08);
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+
+      .card p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .field label {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .field input {
+        width: 100%;
+        padding: 13px 14px;
+        border-radius: 14px;
+        border: 1px solid #cdd8d3;
+        font-size: 14px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #eff6f3;
+        color: var(--accent-dark);
+      }
+
+      .status {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: #f7fbfa;
+        border: 1px solid #e5efeb;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      pre {
+        margin: 0;
+        padding: 16px;
+        border-radius: 18px;
+        overflow: auto;
+        background: #10231f;
+        color: #def7ef;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .note {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <h1>Teste do widget de chatbot</h1>
+        <p>
+          Esta pagina usa o mesmo script embutivel que sera distribuido para outros sites.
+          Configure a API e o <code>clienteId</code>, aplique a configuracao e teste o fluxo do
+          chat no canto inferior direito.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Configuracao da demo</h2>
+          <p>
+            O widget salva <code>tokenConversa</code> e <code>conversaId</code> no
+            <code>localStorage</code>. Agora ele permite varias mensagens seguidas e so responde
+            depois de 3 segundos sem digitacao.
+          </p>
+
+          <div class="field">
+            <label for="baseUrl">Base URL da API</label>
+            <input id="baseUrl" type="text" placeholder="http://localhost:6363" />
+          </div>
+
+          <div class="field">
+            <label for="clienteId">Cliente ID</label>
+            <input id="clienteId" type="text" placeholder="UUID do cliente" />
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="applyConfig" type="button">Aplicar configuracao</button>
+            <button class="secondary" id="clearSession" type="button">Limpar sessao local</button>
+            <button class="secondary" id="copySnippet" type="button">Copiar snippet</button>
+          </div>
+
+          <div class="status" id="statusBox">
+            Aguardando configuracao. O widget sera montado quando voce aplicar os dados.
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Snippet para outros sites</h2>
+          <p>
+            Este e o formato base de implementacao com <code>script loader</code>. Ajuste a URL
+            do script conforme onde voce hospedar <code>public/widget/chatbot-widget.js</code>.
+          </p>
+          <pre id="snippetBox"></pre>
+          <div class="note">
+            Se voce servir pelo proprio backend Nest, uma opcao inicial e expor o arquivo em
+            <code>/widget/chatbot-widget.js</code>.
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <script src="./public/widget/chatbot-widget.js"></script>
+    <script>
+      (function () {
+        var STORAGE_KEY = 'chatbot_rag:demo_config';
+        var baseUrlInput = document.getElementById('baseUrl');
+        var clienteIdInput = document.getElementById('clienteId');
+        var statusBox = document.getElementById('statusBox');
+        var snippetBox = document.getElementById('snippetBox');
+        var savedConfig = {};
+
+        try {
+          savedConfig = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+        } catch (error) {
+          savedConfig = {};
+        }
+
+        baseUrlInput.value = savedConfig.baseUrl || 'http://localhost:6363';
+        clienteIdInput.value = savedConfig.clienteId || '';
+
+        function currentConfig() {
+          return {
+            baseUrl: baseUrlInput.value.trim(),
+            clienteId: clienteIdInput.value.trim(),
+          };
+        }
+
+        function renderSnippet() {
+          var config = currentConfig();
+          var snippet = [
+            '<script>',
+            '  window.ChatbotRagConfig = {',
+            '    baseUrl: "' + (config.baseUrl || 'http://localhost:6363') + '",',
+            '    clienteId: "' + (config.clienteId || 'SEU_CLIENTE_ID') + '",',
+            '    titulo: "Atendimento",',
+            '    subtitulo: "Fale conosco"',
+            '  };',
+            '<\/script>',
+            '<script src="' + (config.baseUrl || 'http://localhost:6363') + '/widget/chatbot-widget.js"><\/script>',
+          ].join('\n');
+
+          snippetBox.textContent = snippet;
+        }
+
+        function setStatus(text) {
+          statusBox.textContent = text;
+        }
+
+        function applyConfig() {
+          var config = currentConfig();
+
+          if (!config.baseUrl || !config.clienteId) {
+            setStatus('Preencha baseUrl e clienteId para montar o widget.');
+            renderSnippet();
+            return;
+          }
+
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+
+          window.ChatbotRagConfig = {
+            baseUrl: config.baseUrl,
+            clienteId: config.clienteId,
+            titulo: 'Atendimento',
+            subtitulo: 'Chat de teste',
+            launcherLabel: 'Abrir chat',
+            autoInit: false,
+          };
+
+          if (window.__chatbotRagWidgetInstance) {
+            window.__chatbotRagWidgetInstance.destroy();
+          }
+
+          window.__chatbotRagWidgetInstance = window.ChatbotRagWidget.create(window.ChatbotRagConfig);
+          setStatus('Widget carregado. Use o chat no canto inferior direito.');
+          renderSnippet();
+        }
+
+        function clearSession() {
+          var config = currentConfig();
+          var suffix = config.clienteId || 'default';
+          localStorage.removeItem('chatbot_rag:' + suffix + ':token');
+          localStorage.removeItem('chatbot_rag:' + suffix + ':conversa_id');
+          setStatus('Sessao local removida. Reaplique a configuracao para iniciar outra conversa.');
+        }
+
+        document.getElementById('applyConfig').addEventListener('click', applyConfig);
+        document.getElementById('clearSession').addEventListener('click', clearSession);
+        document.getElementById('copySnippet').addEventListener('click', function () {
+          renderSnippet();
+          navigator.clipboard.writeText(snippetBox.textContent).then(
+            function () {
+              setStatus('Snippet copiado para a area de transferencia.');
+            },
+            function () {
+              setStatus('Nao foi possivel copiar automaticamente. Copie manualmente.');
+            },
+          );
+        });
+
+        baseUrlInput.addEventListener('input', renderSnippet);
+        clienteIdInput.addEventListener('input', renderSnippet);
+        renderSnippet();
+      })();
+    </script>
+  </body>
+</html>
