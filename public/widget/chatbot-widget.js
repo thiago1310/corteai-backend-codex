@@ -51,7 +51,8 @@
     this.state = {
       open: Boolean(config.autoOpen),
       active: true,
-      statusText: 'Pronto para conversar',
+      statusText: 'Online',
+      statusVariant: 'online',
       conversaId: null,
       tokenConversa: null,
       messages: [],
@@ -125,7 +126,9 @@
       '.chatbot-rag-header h3{margin:0;font-size:16px;line-height:1.2;}' +
       '.chatbot-rag-header p{margin:4px 0 0;font-size:12px;opacity:.82;}' +
       '.chatbot-rag-close{border:0;background:rgba(255,255,255,.15);color:#fff;width:36px;height:36px;border-radius:999px;cursor:pointer;font-size:18px;line-height:1;}' +
-      '.chatbot-rag-status{padding:10px 16px;border-bottom:1px solid #edf2f0;font-size:12px;color:#466056;background:#f7fbfa;min-height:18px;}' +
+      '.chatbot-rag-status{padding:10px 16px;border-bottom:1px solid #edf2f0;font-size:12px;color:#466056;background:#f7fbfa;min-height:18px;display:flex;align-items:center;gap:8px;}' +
+      '.chatbot-rag-status.is-online::before{content:"";width:9px;height:9px;border-radius:999px;background:#21b06b;box-shadow:0 0 0 4px rgba(33,176,107,.14);flex:0 0 auto;}' +
+      '.chatbot-rag-status.is-typing::before,.chatbot-rag-status.is-error::before,.chatbot-rag-status.is-neutral::before{content:none;}' +
       '.chatbot-rag-messages{flex:1;overflow:auto;padding:16px;background:linear-gradient(180deg,#f6fbf9 0%,#ffffff 100%);display:flex;flex-direction:column;gap:10px;}' +
       '.chatbot-rag-empty{margin:auto;text-align:center;color:#61756d;font-size:13px;max-width:220px;}' +
       '.chatbot-rag-message{max-width:84%;padding:12px 14px;border-radius:16px;white-space:pre-wrap;word-break:break-word;line-height:1.4;font-size:14px;}' +
@@ -172,7 +175,7 @@
     header.appendChild(headerContent);
     header.appendChild(closeButton);
 
-    var status = createElement('div', 'chatbot-rag-status', this.state.statusText);
+    var status = createElement('div', 'chatbot-rag-status');
     var messages = createElement('div', 'chatbot-rag-messages');
     var footer = createElement('form', 'chatbot-rag-footer');
     var input = createElement('textarea', 'chatbot-rag-input');
@@ -207,6 +210,7 @@
     this.elements.send = send;
 
     this.syncOpenState();
+    this.updateStatusDisplay();
     this.renderMessages();
   };
 
@@ -246,11 +250,23 @@
     }
   };
 
-  Widget.prototype.setStatus = function (text) {
+  Widget.prototype.updateStatusDisplay = function () {
+    if (!this.elements.status) return;
+    this.elements.status.textContent = this.state.statusText;
+    this.elements.status.classList.remove('is-online', 'is-typing', 'is-error', 'is-neutral');
+    this.elements.status.classList.add('is-' + this.state.statusVariant);
+  };
+
+  Widget.prototype.setStatus = function (text, variant) {
     this.state.statusText = text;
-    if (this.elements.status) {
-      this.elements.status.textContent = text;
-    }
+    this.state.statusVariant = variant || 'neutral';
+    this.updateStatusDisplay();
+  };
+
+  Widget.prototype.setOnlineStatus = function () {
+    this.state.statusText = 'Online';
+    this.state.statusVariant = 'online';
+    this.updateStatusDisplay();
   };
 
   Widget.prototype.autoResizeInput = function () {
@@ -324,7 +340,7 @@
 
     if (data.ativo === false) {
       this.clearSession();
-      this.setStatus('O agente esta inativo no momento.');
+      this.setStatus('O agente esta inativo no momento.', 'neutral');
       return;
     }
 
@@ -355,7 +371,7 @@
 
     if (data.ativo === false) {
       this.clearSession();
-      this.setStatus('O agente esta inativo no momento.');
+      this.setStatus('O agente esta inativo no momento.', 'neutral');
       return;
     }
 
@@ -373,7 +389,7 @@
 
   Widget.prototype.ensureSession = async function () {
     if (!this.config.baseUrl || !this.config.clienteId) {
-      this.setStatus('Configure baseUrl e clienteId.');
+      this.setStatus('Configure baseUrl e clienteId.', 'neutral');
       throw new Error('Configure baseUrl e clienteId.');
     }
 
@@ -390,7 +406,7 @@
     }
 
     this.loadSession();
-    this.setStatus('Conectando ao atendimento...');
+    this.setStatus('Conectando ao atendimento...', 'neutral');
 
     var self = this;
     this.state.sessionPromise = (async function () {
@@ -398,12 +414,12 @@
         if (self.state.tokenConversa) {
           await self.renewConversation();
           if (self.state.active) {
-            self.setStatus('Sessao restaurada.');
+            self.setOnlineStatus();
           }
         } else {
           await self.createConversation();
           if (self.state.active) {
-            self.setStatus('Conversa iniciada.');
+            self.setOnlineStatus();
           }
         }
         self.state.initialized = self.state.active;
@@ -413,10 +429,10 @@
           await self.createConversation();
           self.state.initialized = self.state.active;
           if (self.state.active) {
-            self.setStatus('Nova sessao criada.');
+            self.setOnlineStatus();
           }
         } catch (createError) {
-          self.setStatus(createError.message || 'Nao foi possivel iniciar o chat.');
+          self.setStatus(createError.message || 'Nao foi possivel iniciar o chat.', 'error');
           throw createError;
         }
       } finally {
@@ -530,7 +546,7 @@
 
       if (i < mensagensAssistente.length - 1) {
         this.setAssistantTyping(true);
-        this.setStatus('Assistente digitando...');
+        this.setStatus('Assistente digitando...', 'typing');
         await wait(ASSISTANT_MESSAGE_GAP_MS);
       }
     }
@@ -545,15 +561,15 @@
     this.state.pendingReplyLocalIds = [];
     this.state.waitingForAssistant = true;
     this.setAssistantTyping(true);
-    this.setStatus('Assistente digitando...');
+    this.setStatus('Assistente digitando...', 'typing');
 
     try {
       await this.ensureSession();
       await this.generateAssistantReply();
-      this.setStatus('Atendimento pronto.');
+      this.setOnlineStatus();
     } catch (error) {
       this.state.pendingReplyLocalIds = batchIds.concat(this.state.pendingReplyLocalIds);
-      this.setStatus(error.message || 'Falha ao gerar resposta.');
+      this.setStatus(error.message || 'Falha ao gerar resposta.', 'error');
     } finally {
       this.state.waitingForAssistant = false;
       this.setAssistantTyping(false);
@@ -589,7 +605,7 @@
 
         self.markMessageAsError(localId, error);
         self.renderMessages();
-        self.setStatus(error.message || 'Falha ao enviar mensagem.');
+        self.setStatus(error.message || 'Falha ao enviar mensagem.', 'error');
       });
   };
 
@@ -600,7 +616,7 @@
 
     var text = this.elements.input.value.trim();
     if (!text) {
-      this.setStatus('Digite uma mensagem antes de enviar.');
+      this.setStatus('Digite uma mensagem antes de enviar.', 'neutral');
       return;
     }
 
@@ -616,7 +632,7 @@
     this.elements.input.value = '';
     this.autoResizeInput();
     this.renderMessages();
-    this.setStatus('Mensagem enviada. Aguarde a pausa para o assistente responder.');
+    this.setOnlineStatus();
     this.enqueueUserMessage(text, localId);
   };
 

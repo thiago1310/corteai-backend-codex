@@ -29,6 +29,9 @@ export class ConfiguracaoAgenteEntity {
   @Column({ name: 'instrucoes_extras', type: 'text', nullable: true })
   instrucoesExtras?: string | null;
 
+  @Column({ name: 'limite_maximo_mensagens_por_conversa', type: 'int', nullable: true })
+  limiteMaximoMensagensPorConversa?: number | null;
+
   @Column({ type: 'boolean', default: true })
   ativo!: boolean;
 

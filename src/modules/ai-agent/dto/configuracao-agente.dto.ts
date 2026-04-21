@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class SalvarConfiguracaoAgenteDto {
   @IsOptional()
@@ -22,6 +22,11 @@ export class SalvarConfiguracaoAgenteDto {
   @IsOptional()
   @IsString()
   instrucoesExtras?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  limiteMaximoMensagensPorConversa?: number;
 
   @IsOptional()
   @IsBoolean()

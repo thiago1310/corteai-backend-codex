@@ -30,6 +30,7 @@ interface PayloadTokenConversa {
 
 @Injectable()
 export class AiAgentService {
+  // Service central que orquestra conversa, persistencia e chamada ao RAG.
   private readonly logger = new Logger(AiAgentService.name);
 
   constructor(
@@ -66,21 +67,27 @@ export class AiAgentService {
   }
 
   async obterConfiguracaoAgente(clienteId: string) {
+    this.logger.log(`Obtendo configuracao do agente cliente=${clienteId}`);
     return this.garantirConfiguracao(clienteId);
   }
 
   async salvarConfiguracaoAgente(clienteId: string, dto: SalvarConfiguracaoAgenteDto) {
+    this.logger.log(`Salvando configuracao do agente cliente=${clienteId}`);
     const configuracao = await this.garantirConfiguracao(clienteId);
     configuracao.nomeAgente = dto.nomeAgente ?? configuracao.nomeAgente;
     configuracao.mensagemBoasVindas = dto.mensagemBoasVindas ?? configuracao.mensagemBoasVindas;
     configuracao.promptSistema = dto.promptSistema ?? configuracao.promptSistema;
     configuracao.tomResposta = dto.tomResposta ?? configuracao.tomResposta;
     configuracao.instrucoesExtras = dto.instrucoesExtras ?? configuracao.instrucoesExtras;
+    configuracao.limiteMaximoMensagensPorConversa =
+      dto.limiteMaximoMensagensPorConversa ?? configuracao.limiteMaximoMensagensPorConversa;
     configuracao.ativo = dto.ativo ?? configuracao.ativo;
     return this.configuracaoRepo.save(configuracao);
   }
 
   async criarConversa(dto: CriarConversaDto, identificadorOrigem: string) {
+    // Inicia uma nova sessao publica de conversa para o cliente informado.
+    this.logger.log(`Iniciando criacao de conversa cliente=${dto.clienteId} origem=${identificadorOrigem}`);
     await this.garantirCliente(dto.clienteId);
     const configuracao = await this.garantirConfiguracao(dto.clienteId);
 
@@ -103,6 +110,7 @@ export class AiAgentService {
         origem: 'widget',
       }),
     );
+    this.logger.log(`Conversa criada conversa=${conversa.id} cliente=${dto.clienteId}`);
     return {
       ativo: true,
       conversaId: conversa.id,
@@ -113,6 +121,8 @@ export class AiAgentService {
   }
 
   async renovarTokenConversa(dto: RenovarTokenConversaDto, _identificadorOrigem?: string) {
+    // Restaura a sessao publica da conversa sem expor o id real ao navegador.
+    this.logger.log('Renovando token de conversa');
     const payload = await this.validarTokenConversa(dto.tokenConversa);
     const conversa = await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
     const configuracao = await this.garantirConfiguracao(conversa.clienteId);
@@ -137,17 +147,93 @@ export class AiAgentService {
     return this.buscarConversaOuErro(id, clienteId);
   }
 
+  async listarConversas(clienteId: string) {
+    this.logger.log(`Listando conversas cliente=${clienteId}`);
+    await this.garantirCliente(clienteId);
+
+    const conversas = await this.conversaRepo.find({
+      where: { clienteId },
+      order: { atualizadoEm: 'DESC' },
+    });
+
+    if (!conversas.length) {
+      return [];
+    }
+
+    const conversaIds = conversas.map((item) => item.id);
+    const mensagens = await this.mensagemRepo.find({
+      where: { clienteId },
+      order: { criadoEm: 'DESC' },
+    });
+
+    const resumoPorConversa = new Map<
+      string,
+      {
+        ultimaMensagem: string | null;
+        ultimaMensagemEm: Date | null;
+        ultimaMensagemPapel: string | null;
+        totalMensagens: number;
+      }
+    >();
+
+    for (const mensagem of mensagens) {
+      if (!conversaIds.includes(mensagem.conversaId)) {
+        continue;
+      }
+
+      const atual = resumoPorConversa.get(mensagem.conversaId);
+      if (!atual) {
+        resumoPorConversa.set(mensagem.conversaId, {
+          ultimaMensagem: mensagem.mensagem,
+          ultimaMensagemEm: mensagem.criadoEm,
+          ultimaMensagemPapel: mensagem.papel,
+          totalMensagens: 1,
+        });
+        continue;
+      }
+
+      atual.totalMensagens += 1;
+      resumoPorConversa.set(mensagem.conversaId, atual);
+    }
+
+    return conversas.map((conversa) => {
+      const resumo = resumoPorConversa.get(conversa.id);
+      return {
+        id: conversa.id,
+        clienteId: conversa.clienteId,
+        status: conversa.status,
+        canal: conversa.canal,
+        origem: conversa.origem,
+        dadosImportantes: conversa.dadosImportantes ?? null,
+        criadoEm: conversa.criadoEm,
+        atualizadoEm: conversa.atualizadoEm,
+        ultimaMensagem: resumo?.ultimaMensagem ?? null,
+        ultimaMensagemEm: resumo?.ultimaMensagemEm ?? null,
+        ultimaMensagemPapel: resumo?.ultimaMensagemPapel ?? null,
+        totalMensagens: resumo?.totalMensagens ?? 0,
+      };
+    });
+  }
+
   async atualizarDadosImportantes(id: string, clienteId: string, dto: AtualizarDadosImportantesDto) {
+    this.logger.log(`Atualizando dados importantes conversa=${id} cliente=${clienteId}`);
     const conversa = await this.buscarConversaOuErro(id, clienteId);
     conversa.dadosImportantes = dto.dadosImportantes ?? null;
     return this.conversaRepo.save(conversa);
   }
 
   async criarMensagem(dto: CriarMensagemDto, identificadorOrigem: string) {
+    // Persiste apenas mensagem do usuario a partir do endpoint publico.
+    this.logger.log(`Recebendo mensagem publica origem=${identificadorOrigem}`);
     const payload = await this.validarTokenConversa(dto.tokenConversa);
     await this.buscarConversaOuErro(payload.conversaId, payload.clienteId);
-    await this.validarAgenteAtivo(payload.clienteId);
+    const configuracao = await this.validarAgenteAtivo(payload.clienteId);
     this.validarLimiteMensagem(payload.clienteId, payload.conversaId, identificadorOrigem);
+    await this.validarLimiteMensagensUsuarioPorConversa(
+      payload.clienteId,
+      payload.conversaId,
+      configuracao.limiteMaximoMensagensPorConversa ?? null,
+    );
 
     const mensagem = this.mensagemRepo.create({
       clienteId: payload.clienteId,
@@ -161,10 +247,15 @@ export class AiAgentService {
       },
     });
 
-    return this.mensagemRepo.save(mensagem);
+    const mensagemSalva = await this.mensagemRepo.save(mensagem);
+    this.logger.log(
+      `Mensagem do usuario salva conversa=${payload.conversaId} cliente=${payload.clienteId} mensagem=${mensagemSalva.id}`,
+    );
+    return mensagemSalva;
   }
 
   async listarMensagensConversa(id: string, clienteId: string) {
+    this.logger.log(`Listando mensagens conversa=${id} cliente=${clienteId}`);
     await this.buscarConversaOuErro(id, clienteId);
     const mensagens = await this.mensagemRepo.find({
       where: { conversaId: id, clienteId },
@@ -174,6 +265,8 @@ export class AiAgentService {
   }
 
   async responderConversa(id: string, dto: ResponderConversaDto, identificadorOrigem?: string) {
+    // Processa a conversa completa, chama o RAG e persiste a resposta do assistente.
+    this.logger.log(`Iniciando resposta da conversa conversa=${id} origem=${identificadorOrigem ?? 'n/a'}`);
     const payload = await this.validarTokenConversa(dto.tokenConversa);
     if (payload.conversaId !== id) {
       throw new ForbiddenException('Token da conversa nao corresponde ao identificador informado.');
@@ -190,6 +283,9 @@ export class AiAgentService {
       where: { conversaId: payload.conversaId, clienteId: payload.clienteId },
       order: { criadoEm: 'ASC' },
     });
+    this.logger.log(
+      `Historico carregado conversa=${payload.conversaId} cliente=${payload.clienteId} totalMensagens=${mensagens.length}`,
+    );
 
     if (!mensagens.length) {
       throw new BadRequestException('A conversa nao possui mensagens para responder.');
@@ -197,12 +293,31 @@ export class AiAgentService {
 
     const respostaRag = await this.ragService.responderConversa(
       payload.clienteId,
-      mensagens.map((item) => ({ papel: item.papel, mensagem: item.mensagem })),
+      mensagens.map((item) => ({
+        papel: item.papel,
+        mensagem: item.mensagem,
+        criadoEm: item.criadoEm,
+      })),
       configuracao,
       dto.instrucaoExtra,
     );
+    this.logger.log(
+      `RAG finalizado conversa=${payload.conversaId} ignorar=${respostaRag.ignorarResposta === true} contextos=${respostaRag.contextos.length}`,
+    );
+
+    if (respostaRag.ignorarResposta || !respostaRag.resposta) {
+      this.logger.log(`Resposta ignorada conversa=${payload.conversaId} motivo=${respostaRag.motivo ?? 'sem_resposta'}`);
+      return {
+        mensagens: [],
+        contextos: [],
+        dadosImportantes: conversa.dadosImportantes ?? null,
+        ignorada: true,
+        motivo: respostaRag.motivo ?? 'sem_resposta',
+      };
+    }
 
     const paragrafosResposta = this.quebrarRespostaEmMensagens(respostaRag.resposta);
+    this.logger.log(`Persistindo resposta do assistente conversa=${payload.conversaId} paragrafos=${paragrafosResposta.length}`);
     const mensagensAssistente = await this.mensagemRepo.save(
       paragrafosResposta.map((paragrafo, indice) =>
         this.mensagemRepo.create({
@@ -225,17 +340,24 @@ export class AiAgentService {
     const dadosImportantesExtraidos = await this.ragService.extrairDadosImportantes(
       mensagens
         .concat(mensagensAssistente)
-        .map((item) => ({ papel: item.papel, mensagem: item.mensagem })),
+        .map((item) => ({
+          papel: item.papel,
+          mensagem: item.mensagem,
+          criadoEm: item.criadoEm,
+        })),
       conversa.dadosImportantes ?? null,
     );
 
     if (dadosImportantesExtraidos) {
+      this.logger.log(`Atualizando memoria da conversa conversa=${payload.conversaId}`);
       conversa.dadosImportantes = this.mesclarDadosImportantes(
         conversa.dadosImportantes ?? null,
         dadosImportantesExtraidos,
       );
       await this.conversaRepo.save(conversa);
     }
+
+    this.logger.log(`Fluxo de resposta concluido conversa=${payload.conversaId}`);
 
     return {
       mensagens: mensagensAssistente.map((item) => this.mapearMensagem(item)),
@@ -260,6 +382,7 @@ export class AiAgentService {
     await this.garantirCliente(clienteId);
     let configuracao = await this.configuracaoRepo.findOne({ where: { clienteId } });
     if (!configuracao) {
+      this.logger.log(`Criando configuracao padrao do agente cliente=${clienteId}`);
       configuracao = await this.configuracaoRepo.save(
         this.configuracaoRepo.create({
           clienteId,
@@ -268,6 +391,7 @@ export class AiAgentService {
           promptSistema: DEFAULT_AGENT_PROMPT,
           tomResposta: 'objetivo',
           instrucoesExtras: null,
+          limiteMaximoMensagensPorConversa: null,
           ativo: true,
         }),
       );
@@ -292,6 +416,7 @@ export class AiAgentService {
   }
 
   private async gerarTokenConversa(conversaId: string, clienteId: string) {
+    this.logger.debug(`Gerando token de conversa conversa=${conversaId} cliente=${clienteId}`);
     const payload: PayloadTokenConversa = {
       conversaId,
       clienteId,
@@ -306,6 +431,7 @@ export class AiAgentService {
       if (payload.tipo !== 'conversa') {
         throw new ForbiddenException('Token de conversa invalido.');
       }
+      this.logger.debug(`Token de conversa validado conversa=${payload.conversaId} cliente=${payload.clienteId}`);
       return payload;
     } catch {
       throw new ForbiddenException('Token de conversa invalido ou expirado.');
@@ -361,6 +487,28 @@ export class AiAgentService {
         );
         throw error;
       }
+    }
+  }
+
+  private async validarLimiteMensagensUsuarioPorConversa(
+    clienteId: string,
+    conversaId: string,
+    limiteMaximoMensagensPorConversa: number | null,
+  ) {
+    if (!limiteMaximoMensagensPorConversa) {
+      return;
+    }
+
+    const totalMensagensUsuario = await this.mensagemRepo.count({
+      where: {
+        clienteId,
+        conversaId,
+        papel: 'usuario',
+      },
+    });
+
+    if (totalMensagensUsuario >= limiteMaximoMensagensPorConversa) {
+      throw new ForbiddenException('Esta conversa atingiu o limite maximo de mensagens do usuario.');
     }
   }
 

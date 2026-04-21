@@ -255,7 +255,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"nomeAgente\": \"Assistente Virtual\",\n  \"mensagemBoasVindas\": \"Oi, como posso ajudar?\",\n  \"promptSistema\": \"Voce e um atendente virtual objetivo.\",\n  \"tomResposta\": \"objetivo\",\n  \"instrucoesExtras\": \"Nao invente informacoes.\",\n  \"ativo\": true\n}"
+                  "raw": "{\n  \"nomeAgente\": \"Assistente Virtual\",\n  \"mensagemBoasVindas\": \"Oi, como posso ajudar?\",\n  \"promptSistema\": \"Voce e um atendente virtual objetivo.\",\n  \"tomResposta\": \"objetivo\",\n  \"instrucoesExtras\": \"Nao invente informacoes.\",\n  \"limiteMaximoMensagensPorConversa\": 30,\n  \"ativo\": true\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/ia/configuracao",
@@ -269,7 +269,7 @@
                 }
               },
               "response": [],
-              "description": "Salva nome, mensagem inicial, prompt e comportamento do agente."
+              "description": "Salva nome, mensagem inicial, prompt, limite maximo de mensagens do usuario por conversa e comportamento do agente."
             }
           ],
           "description": "Configuracao funcional do agente virtual do cliente."
@@ -401,6 +401,31 @@
         {
           "name": "Conversas",
           "item": [
+            {
+              "name": "Listar Conversas",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwtToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/ia/conversas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ia",
+                    "conversas"
+                  ]
+                }
+              },
+              "response": [],
+              "description": "Lista todas as conversas do cliente autenticado com resumo da ultima mensagem e total de mensagens."
+            },
             {
               "name": "Criar Conversa",
               "event": [

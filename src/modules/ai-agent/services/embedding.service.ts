@@ -33,6 +33,7 @@ export interface DocumentoAtualizacao {
 
 @Injectable()
 export class EmbeddingService {
+  // Service que gera embeddings e consulta a base vetorial dos documentos.
   private readonly logger = new Logger(EmbeddingService.name);
   private readonly client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -42,10 +43,12 @@ export class EmbeddingService {
 
   async gerarEmbedding(texto: string): Promise<number[]> {
     try {
+      this.logger.log(`Gerando embedding tamanhoTexto=${texto.trim().length}`);
       const resposta = await this.client.embeddings.create({
         model: 'text-embedding-3-small',
         input: texto.trim(),
       });
+      this.logger.log(`Embedding gerado dimensoes=${resposta.data[0]?.embedding?.length ?? 0}`);
       return resposta.data[0]?.embedding || [];
     } catch (error) {
       const err = error as Error;
@@ -55,6 +58,8 @@ export class EmbeddingService {
   }
 
   async criarDocumento(input: DocumentoInput): Promise<string> {
+    // Cria o documento e materializa o vetor para busca semantica futura.
+    this.logger.log(`Criando documento cliente=${input.clienteId} titulo=${input.titulo ?? 'sem_titulo'}`);
     const conteudo = this.montarConteudo(input.pergunta, input.resposta);
     const vetorEmbedding = this.converterParaVetor(await this.gerarEmbedding(conteudo));
 
@@ -85,10 +90,13 @@ export class EmbeddingService {
       ],
     );
 
-    return String(linhas[0]?.id);
+    const id = String(linhas[0]?.id);
+    this.logger.log(`Documento criado id=${id} cliente=${input.clienteId}`);
+    return id;
   }
 
   async atualizarDocumento(id: string, clienteId: string, atualizacao: DocumentoAtualizacao): Promise<void> {
+    this.logger.log(`Atualizando documento id=${id} cliente=${clienteId}`);
     const atual = await this.buscarDocumentoBruto(id, clienteId);
     if (!atual) {
       throw new InternalServerErrorException('Documento nao encontrado.');
@@ -127,10 +135,13 @@ export class EmbeddingService {
   }
 
   async excluirDocumento(id: string, clienteId: string): Promise<void> {
+    this.logger.log(`Excluindo documento id=${id} cliente=${clienteId}`);
     await this.dataSource.query('DELETE FROM documentos WHERE id = $1 AND cliente_id = $2', [id, clienteId]);
   }
 
   async buscarDocumentos(consulta: string, clienteId: string, limite = 3): Promise<ResultadoBuscaDocumento[]> {
+    // Busca vetorial dos documentos mais proximos para compor o contexto do RAG.
+    this.logger.log(`Buscando documentos cliente=${clienteId} limite=${limite} tamanhoConsulta=${consulta.trim().length}`);
     const vetorEmbedding = this.converterParaVetor(await this.gerarEmbedding(consulta));
     const linhas = await this.dataSource.query(
       `SELECT id,
@@ -148,6 +159,7 @@ export class EmbeddingService {
       [vetorEmbedding, clienteId, limite],
     );
 
+    this.logger.log(`Busca vetorial concluida cliente=${clienteId} resultados=${linhas.length}`);
     return linhas as ResultadoBuscaDocumento[];
   }
 
