@@ -130,6 +130,22 @@
         font-size: 14px;
       }
 
+      .embed-box {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #e5efeb;
+      }
+
+      .embed-box h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+
+      .embed-box p {
+        margin: 0 0 12px;
+        font-size: 14px;
+      }
+
       pre {
         margin: 0;
         padding: 16px;
@@ -176,7 +192,7 @@
 
           <div class="field">
             <label for="baseUrl">Base URL da API</label>
-            <input id="baseUrl" type="text" placeholder="http://localhost:6363" />
+            <input id="baseUrl" type="text" placeholder="https://chatbotapi.thiagomachado.dev.br" />
           </div>
 
           <div class="field">
@@ -192,6 +208,20 @@
 
           <div class="status" id="statusBox">
             Aguardando configuracao. O widget sera montado quando voce aplicar os dados.
+          </div>
+
+          <div class="embed-box">
+            <h3>Copiar para outro site</h3>
+            <p>
+              Depois de preencher a API e o <code>clienteId</code>, copie este codigo e cole no
+              site que vai receber o chatbot.
+            </p>
+            <pre id="inlineSnippetBox"></pre>
+            <div class="actions">
+              <button class="secondary" id="copyInlineSnippet" type="button">
+                Copiar codigo de instalacao
+              </button>
+            </div>
           </div>
         </article>
 
@@ -218,6 +248,7 @@
         var clienteIdInput = document.getElementById('clienteId');
         var statusBox = document.getElementById('statusBox');
         var snippetBox = document.getElementById('snippetBox');
+        var inlineSnippetBox = document.getElementById('inlineSnippetBox');
         var savedConfig = {};
 
         try {
@@ -226,7 +257,7 @@
           savedConfig = {};
         }
 
-        baseUrlInput.value = savedConfig.baseUrl || 'http://localhost:6363';
+        baseUrlInput.value = savedConfig.baseUrl || 'https://chatbotapi.thiagomachado.dev.br';
         clienteIdInput.value = savedConfig.clienteId || '';
 
         function currentConfig() {
@@ -241,16 +272,17 @@
           var snippet = [
             '<script>',
             '  window.ChatbotRagConfig = {',
-            '    baseUrl: "' + (config.baseUrl || 'http://localhost:6363') + '",',
+            '    baseUrl: "' + (config.baseUrl || 'https://chatbotapi.thiagomachado.dev.br') + '",',
             '    clienteId: "' + (config.clienteId || 'SEU_CLIENTE_ID') + '",',
             '    titulo: "Atendimento",',
             '    subtitulo: "Fale conosco"',
             '  };',
             '<\/script>',
-            '<script src="' + (config.baseUrl || 'http://localhost:6363') + '/widget/chatbot-widget.js"><\/script>',
+            '<script src="' + (config.baseUrl || 'https://chatbotapi.thiagomachado.dev.br') + '/widget/chatbot-widget.js"><\/script>',
           ].join('\n');
 
           snippetBox.textContent = snippet;
+          inlineSnippetBox.textContent = snippet;
         }
 
         function setStatus(text) {
@@ -301,6 +333,17 @@
           navigator.clipboard.writeText(snippetBox.textContent).then(
             function () {
               setStatus('Snippet copiado para a area de transferencia.');
+            },
+            function () {
+              setStatus('Nao foi possivel copiar automaticamente. Copie manualmente.');
+            },
+          );
+        });
+        document.getElementById('copyInlineSnippet').addEventListener('click', function () {
+          renderSnippet();
+          navigator.clipboard.writeText(inlineSnippetBox.textContent).then(
+            function () {
+              setStatus('Codigo de instalacao copiado para a area de transferencia.');
             },
             function () {
               setStatus('Nao foi possivel copiar automaticamente. Copie manualmente.');

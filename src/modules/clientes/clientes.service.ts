@@ -17,7 +17,7 @@ export class ClientesService {
   constructor(
     @InjectRepository(ClienteEntity)
     private readonly repo: Repository<ClienteEntity>,
-  ) {}
+  ) { }
 
   async create(dto: CreateClienteDto) {
     const existente = await this.findByEmail(dto.email);
@@ -26,6 +26,9 @@ export class ClientesService {
     }
 
     const senhaHash = await bcrypt.hash(dto.senha, 10);
+    dto.plano = "basico";
+    dto.status = "inativo";
+
     const entity = this.repo.create({
       nome: dto.nome,
       email: dto.email,

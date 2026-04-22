@@ -24,7 +24,7 @@ export class AuthService {
   constructor(
     private readonly jwt: JwtService,
     private readonly clientes: ClientesService,
-  ) {}
+  ) { }
 
   async validateCliente(email: string, senha: string) {
     const cliente = await this.clientes.findByEmail(email);
@@ -35,7 +35,11 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const cliente = await this.validateCliente(dto.email, dto.senha);
+
     if (!cliente) throw new UnauthorizedException('Credenciais invalidas');
+    if (!cliente.status || cliente.status !== 'ativo') {
+      throw new UnauthorizedException('Cliente inativo. Entre em contato com o suporte.');
+    }
     const payload = { sub: cliente.id, scope: 'cliente' as AuthScope, email: cliente.email };
     const access_token = await this.jwt.signAsync(payload);
     return { access_token };

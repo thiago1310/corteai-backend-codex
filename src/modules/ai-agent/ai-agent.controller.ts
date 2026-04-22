@@ -84,6 +84,12 @@ export class AiAgentController {
     return this.aiAgentService.criarConversa(dto, this.identificadorOrigem(req));
   }
 
+  @Get('status/:clienteId')
+  obterStatusPublico(@Param('clienteId') clienteId: string) {
+    this.logger.log(`GET /ia/status/${clienteId}`);
+    return this.aiAgentService.obterStatusPublico(clienteId);
+  }
+
   @Post('conversas/renovar-token')
   renovarToken(@Body() dto: RenovarTokenConversaDto, @Req() req: Request) {
     this.logger.log(`POST /ia/conversas/renovar-token origem=${this.identificadorOrigem(req)}`);

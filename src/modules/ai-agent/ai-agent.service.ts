@@ -48,7 +48,7 @@ export class AiAgentService {
     private readonly clienteRepo: Repository<ClienteEntity>,
     @InjectRepository(DocumentoEntity)
     private readonly documentoRepo: Repository<DocumentoEntity>,
-  ) {}
+  ) { }
 
   listarDocumentos(clienteId: string) {
     return this.documentosService.listar(clienteId);
@@ -69,6 +69,19 @@ export class AiAgentService {
   async obterConfiguracaoAgente(clienteId: string) {
     this.logger.log(`Obtendo configuracao do agente cliente=${clienteId}`);
     return this.garantirConfiguracao(clienteId);
+  }
+
+  async obterStatusPublico(clienteId: string) {
+    this.logger.log(`Consultando status publico do agente cliente=${clienteId}`);
+    const cliente = await this.garantirCliente(clienteId);
+    const configuracao = await this.garantirConfiguracao(clienteId);
+
+    return {
+      clienteId,
+      ativo: cliente.status === 'ativo' && configuracao.ativo === true,
+      nomeAgente: configuracao.nomeAgente,
+      clienteStatus: cliente.status,
+    };
   }
 
   async salvarConfiguracaoAgente(clienteId: string, dto: SalvarConfiguracaoAgenteDto) {
@@ -268,6 +281,16 @@ export class AiAgentService {
     // Processa a conversa completa, chama o RAG e persiste a resposta do assistente.
     this.logger.log(`Iniciando resposta da conversa conversa=${id} origem=${identificadorOrigem ?? 'n/a'}`);
     const payload = await this.validarTokenConversa(dto.tokenConversa);
+
+    const cliente = await this.clienteRepo.findOne({ where: { id: payload.clienteId } });
+    if (!cliente) {
+      throw new NotFoundException('Cliente nao encontrado.');
+    }
+    if (cliente.status !== 'ativo') {
+      throw new ForbiddenException('Cliente inativo.');
+    }
+
+
     if (payload.conversaId !== id) {
       throw new ForbiddenException('Token da conversa nao corresponde ao identificador informado.');
     }

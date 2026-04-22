@@ -402,6 +402,26 @@
           "name": "Conversas",
           "item": [
             {
+              "name": "Consultar Status Publico",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/ia/status/{{clienteId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ia",
+                    "status",
+                    "{{clienteId}}"
+                  ]
+                }
+              },
+              "response": [],
+              "description": "Consulta publicamente se o cliente e o agente estao ativos antes de montar o widget no site."
+            },
+            {
               "name": "Listar Conversas",
               "request": {
                 "method": "GET",

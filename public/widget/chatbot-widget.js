@@ -330,6 +330,41 @@
     return response.json();
   };
 
+  Widget.prototype.httpGet = async function (path) {
+    var response = await fetch(this.config.baseUrl + path, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      var errorBody = await response.text();
+      var parsed = parseJsonSafely(errorBody);
+      var message =
+        (parsed && parsed.message && (Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message)) ||
+        'Falha na requisicao.';
+      var error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+
+    return response.json();
+  };
+
+  Widget.prototype.checkPublicStatus = async function () {
+    var data = await this.httpGet('/ia/status/' + encodeURIComponent(this.config.clienteId));
+    this.atualizarNomeAgente(data.nomeAgente);
+    this.setActive(data.ativo !== false);
+
+    if (data.ativo === false) {
+      this.clearSession();
+      this.setStatus('O agente esta inativo no momento.', 'neutral');
+    }
+
+    return data;
+  };
+
   Widget.prototype.createConversation = async function () {
     var data = await this.http('/ia/conversas', {
       clienteId: this.config.clienteId,
@@ -565,16 +600,28 @@
 
     try {
       await this.ensureSession();
+      if (!this.state.active) {
+        this.state.pendingReplyLocalIds = [];
+        return;
+      }
       await this.generateAssistantReply();
       this.setOnlineStatus();
     } catch (error) {
-      this.state.pendingReplyLocalIds = batchIds.concat(this.state.pendingReplyLocalIds);
-      this.setStatus(error.message || 'Falha ao gerar resposta.', 'error');
+      if (error && error.status === 403) {
+        this.clearSession();
+        this.state.initialized = false;
+        this.setActive(false);
+        this.setStatus('O agente esta inativo no momento.', 'neutral');
+        this.state.pendingReplyLocalIds = [];
+      } else {
+        this.state.pendingReplyLocalIds = batchIds.concat(this.state.pendingReplyLocalIds);
+        this.setStatus(error.message || 'Falha ao gerar resposta.', 'error');
+      }
     } finally {
       this.state.waitingForAssistant = false;
       this.setAssistantTyping(false);
 
-      if (this.state.pendingReplyLocalIds.length) {
+      if (this.state.active && this.state.pendingReplyLocalIds.length) {
         this.scheduleAssistantReply();
       }
     }
@@ -645,10 +692,29 @@
 
   Widget.prototype.mount = function () {
     if (this.state.destroyed) return;
-    this.renderShell();
-    this.autoResizeInput();
     this.setActive(true);
-    this.ensureSession().catch(function () {});
+
+    var self = this;
+    this.checkPublicStatus()
+      .then(function () {
+        if (!self.state.active || self.state.destroyed) {
+          return;
+        }
+
+        return self.ensureSession();
+      })
+      .then(function () {
+        if (!self.state.active || self.state.destroyed || self.elements.root) {
+          return;
+        }
+
+        self.renderShell();
+        self.autoResizeInput();
+        self.syncOpenState();
+        self.updateStatusDisplay();
+        self.renderMessages();
+      })
+      .catch(function () {});
   };
 
   Widget.prototype.destroy = function () {
